@@ -213,6 +213,33 @@
          <h2 class="mb-4 text-xl font-bold">Einstellungen</h2>
 
          <form id="settingsForm" class="grid grid-cols-1 gap-4 md:grid-cols-2">
+           <div class="md:col-span-2 rounded-2xl border border-violet-200 bg-violet-50/70 p-3">
+             <p class="mb-2 text-xs font-bold uppercase tracking-[0.15em] text-violet-700">Lernsets</p>
+             <div class="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto_auto] sm:items-end">
+               <label class="flex flex-col gap-2 text-sm font-medium">
+                Aktives Set
+                 <select
+                  id="setSelector"
+                  class="rounded-xl border border-violet-200 bg-white px-3 py-2 font-semibold focus:outline-none focus:ring-4 focus:ring-violet-300/70"
+                 ></select>
+               </label>
+               <button
+                id="createSetBtn"
+                type="button"
+                class="rounded-2xl bg-violet-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-violet-800 focus:outline-none focus:ring-4 focus:ring-violet-300/70"
+               >
+                Neues Set
+               </button>
+               <button
+                id="deleteSetBtn"
+                type="button"
+                class="rounded-2xl border border-rose-300 bg-white px-4 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-50 focus:outline-none focus:ring-4 focus:ring-rose-300/70"
+               >
+                Set löschen
+               </button>
+             </div>
+           </div>
+
            <label class="flex flex-col gap-2 text-sm font-medium">
             Vokabeln pro Sitzung
              <input
@@ -448,7 +475,7 @@
          <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
            <div>
              <p class="text-xs font-bold uppercase tracking-[0.2em] text-violet-700">Lernsitzung</p>
-             <p id="sessionInfo" class="mt-1 text-sm text-violet-900/80">Druecke Start, um zu beginnen.</p>
+             <p id="sessionInfo" class="mt-1 text-sm text-violet-900/80">Ladevorgang…</p>
            </div>
            <div class="rounded-2xl bg-violet-50 px-4 py-2 text-right">
              <p class="text-xs font-semibold text-violet-700">Zeit</p>
@@ -498,11 +525,11 @@
          </div>
 
          <!-- Rating Buttons -->
-         <div id="ratingButtons" class="hidden mb-5 flex flex-wrap justify-center gap-3">
+        <div id="ratingButtons" class="hidden mb-5 flex flex-nowrap justify-center gap-2 overflow-x-auto pb-1">
            <button
             data-rating="again"
             type="button"
-            class="rounded-2xl border-2 border-rose-300 bg-rose-50 px-6 py-3 text-sm font-semibold text-rose-800 transition hover:bg-rose-100 focus:outline-none focus:ring-4 focus:ring-rose-300/70"
+            class="shrink-0 rounded-xl border-2 border-rose-300 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-800 transition hover:bg-rose-100 focus:outline-none focus:ring-4 focus:ring-rose-300/70 sm:rounded-2xl sm:px-5 sm:py-3 sm:text-sm"
            >
             <span class="block text-xs">Wiederholen</span>
             <span class="block font-black">&lt; 1 Min</span>
@@ -510,7 +537,7 @@
            <button
             data-rating="hard"
             type="button"
-            class="rounded-2xl border-2 border-orange-300 bg-orange-50 px-6 py-3 text-sm font-semibold text-orange-800 transition hover:bg-orange-100 focus:outline-none focus:ring-4 focus:ring-orange-300/70"
+            class="shrink-0 rounded-xl border-2 border-orange-300 bg-orange-50 px-3 py-2 text-xs font-semibold text-orange-800 transition hover:bg-orange-100 focus:outline-none focus:ring-4 focus:ring-orange-300/70 sm:rounded-2xl sm:px-5 sm:py-3 sm:text-sm"
            >
             <span class="block text-xs">Schwer</span>
             <span class="block font-black" id="hardInterval">6 Min</span>
@@ -518,7 +545,7 @@
            <button
             data-rating="good"
             type="button"
-            class="rounded-2xl border-2 border-blue-300 bg-blue-50 px-6 py-3 text-sm font-semibold text-blue-800 transition hover:bg-blue-100 focus:outline-none focus:ring-4 focus:ring-blue-300/70"
+            class="shrink-0 rounded-xl border-2 border-blue-300 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-800 transition hover:bg-blue-100 focus:outline-none focus:ring-4 focus:ring-blue-300/70 sm:rounded-2xl sm:px-5 sm:py-3 sm:text-sm"
            >
             <span class="block text-xs">Gut</span>
             <span class="block font-black" id="goodInterval">10 Min</span>
@@ -526,7 +553,7 @@
            <button
             data-rating="easy"
             type="button"
-            class="rounded-2xl border-2 border-emerald-300 bg-emerald-50 px-6 py-3 text-sm font-semibold text-emerald-800 transition hover:bg-emerald-100 focus:outline-none focus:ring-4 focus:ring-emerald-300/70"
+            class="shrink-0 rounded-xl border-2 border-emerald-300 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800 transition hover:bg-emerald-100 focus:outline-none focus:ring-4 focus:ring-emerald-300/70 sm:rounded-2xl sm:px-5 sm:py-3 sm:text-sm"
            >
             <span class="block text-xs">Leicht</span>
             <span class="block font-black" id="easyInterval">1 Std</span>
@@ -547,25 +574,11 @@
          <!-- Session Controls -->
          <div class="flex flex-wrap gap-3">
            <button
-            id="startBtn"
-            type="button"
-            class="rounded-2xl bg-emerald-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-300/70"
-           >
-            Start
-           </button>
-           <button
             id="nextBtn"
             type="button"
             class="hidden rounded-2xl border border-violet-300 bg-white px-5 py-2 text-sm font-semibold text-violet-900 transition hover:bg-violet-50 focus:outline-none focus:ring-4 focus:ring-violet-300/70"
            >
             Nächste Karte →
-           </button>
-           <button
-            id="resetSessionBtn"
-            type="button"
-            class="rounded-2xl border border-violet-300 bg-white px-5 py-2 text-sm font-semibold text-violet-900 transition hover:bg-violet-50 focus:outline-none focus:ring-4 focus:ring-violet-300/70"
-           >
-            Sitzung zurücksetzen
            </button>
          </div>
        </section>
@@ -594,7 +607,9 @@
       const STORAGE_KEY = "vocabTrainerCardsV1";
       const SETTINGS_KEY = "vocabTrainerSettingsV1";
       const SESSION_KEY = "vocabTrainerSessionV1";
+      const ACTIVE_SET_KEY = "vocabTrainerActiveSetV1";
       const API_BASE = "/api";
+      const DEFAULT_SET_ID = "default";
 
       const defaultSettings = {
         cardsPerSession: 20,
@@ -771,6 +786,8 @@
       // ============================================================
       const state = {
         cards: [],
+        sets: [],
+        currentSetId: DEFAULT_SET_ID,
         settings: { ...defaultSettings },
         session: {
           queue: [],
@@ -834,6 +851,9 @@
         ttsSpanishRateLabel: document.getElementById("ttsSpanishRateLabel"),
         saveSettingsBtn: document.getElementById("saveSettingsBtn"),
         resetSettingsBtn: document.getElementById("resetSettingsBtn"),
+        setSelector: document.getElementById("setSelector"),
+        createSetBtn: document.getElementById("createSetBtn"),
+        deleteSetBtn: document.getElementById("deleteSetBtn"),
 
         // Manage
         toggleManageBtn: document.getElementById("toggleManageBtn"),
@@ -870,15 +890,109 @@
         progressText: document.getElementById("progressText"),
         scoreText: document.getElementById("scoreText"),
         progressBar: document.getElementById("progressBar"),
-        startBtn: document.getElementById("startBtn"),
         nextBtn: document.getElementById("nextBtn"),
-        resetSessionBtn: document.getElementById("resetSessionBtn"),
 
         // Summary
         summaryPanel: document.getElementById("summaryPanel"),
         summaryText: document.getElementById("summaryText"),
         newSessionBtn: document.getElementById("newSessionBtn")
        };
+
+      function getSetStorageKey(baseKey, setId) {
+        return `${baseKey}:${setId || DEFAULT_SET_ID}`;
+      }
+
+      function normalizeSetId(setId) {
+        return String(setId || DEFAULT_SET_ID).trim() || DEFAULT_SET_ID;
+      }
+
+      async function loadSets() {
+        try {
+          const sets = await apiRequest("/sets");
+          state.sets = Array.isArray(sets) && sets.length ? sets : [{ id: DEFAULT_SET_ID, name: "Default", cardCount: 0 }];
+          return;
+        } catch {
+          state.sets = [{ id: DEFAULT_SET_ID, name: "Default", cardCount: 0 }];
+        }
+      }
+
+      function renderSetSelector() {
+        if (!el.setSelector) return;
+        const current = normalizeSetId(state.currentSetId);
+        const options = state.sets.map(setItem => {
+          const selected = setItem.id === current ? "selected" : "";
+          const count = Number(setItem.cardCount || 0);
+          const suffix = count === 1 ? "1 Karte" : `${count} Karten`;
+          return `<option value="${setItem.id}" ${selected}>${setItem.name} (${suffix})</option>`;
+        });
+        el.setSelector.innerHTML = options.join("");
+        const isDefault = current === DEFAULT_SET_ID;
+        el.deleteSetBtn.disabled = isDefault || state.sets.length <= 1;
+        el.deleteSetBtn.classList.toggle("opacity-50", el.deleteSetBtn.disabled);
+      }
+
+      function resetSessionUiForSetSwitch() {
+        clearInterval(state.session.timerId);
+        clearTimeout(state.session.autoFlipId);
+        state.session = {
+          queue: [],
+          currentIndex: 0,
+          reviewed: 0,
+          correct: 0,
+          isRunning: false,
+          flipped: false,
+          timerId: null,
+          autoFlipId: null,
+          timeLeft: 0,
+          currentCard: null
+        };
+
+        el.cardFrontText.textContent = "--";
+        el.cardBackText.textContent = "";
+        el.cardExampleFront.textContent = "";
+        el.cardExampleBack.textContent = "";
+        el.soundBackBtn.style.display = "none";
+        el.soundBackExampleBtn.style.display = "none";
+        resetCardToFrontInstant();
+        el.ratingButtons.classList.add("hidden");
+        el.nextBtn.classList.add("hidden");
+        el.summaryPanel.classList.add("hidden");
+        el.timerText.textContent = "--";
+        el.progressText.textContent = "0 / 0";
+        el.scoreText.textContent = "0 richtig";
+        el.progressBar.style.width = "0%";
+      }
+
+      async function switchSet(setId, options = {}) {
+        const nextSetId = normalizeSetId(setId);
+        if (!state.sets.some(s => s.id === nextSetId)) return false;
+        if (state.currentSetId === nextSetId && !options.forceReload) return true;
+
+        if (state.session.isRunning && !options.skipConfirm) {
+          const ok = window.confirm("Beim Set-Wechsel wird die aktuelle Sitzung beendet. Fortfahren?");
+          if (!ok) {
+            renderSetSelector();
+            return false;
+          }
+        }
+
+        state.currentSetId = nextSetId;
+        localStorage.setItem(ACTIVE_SET_KEY, nextSetId);
+        resetSessionUiForSetSwitch();
+
+        await loadSettings();
+        renderSettingsToForm();
+        await loadCards();
+        updateTagFilter();
+        renderCardList();
+        updateStats();
+        renderSetSelector();
+
+        if (!options.skipRestartSession) {
+          startSession();
+        }
+        return true;
+      }
 
       // ============================================================
       // SM-2 ALGORITHM
@@ -982,18 +1096,19 @@
           repetitions: 0,
           nextReview: null,
           lastReview: null,
-          createdAt: new Date().toISOString()
+          createdAt: new Date().toISOString(),
+          setId: state.currentSetId
          };
        }
 
       async function loadCards() {
         try {
-          const cards = await apiRequest("/cards");
+          const cards = await apiRequest(`/cards?set_id=${encodeURIComponent(state.currentSetId)}`);
           state.cards = Array.isArray(cards) ? cards : [];
           return;
         } catch {
           try {
-            const raw = localStorage.getItem(STORAGE_KEY);
+            const raw = localStorage.getItem(getSetStorageKey(STORAGE_KEY, state.currentSetId));
             if (raw) {
               state.cards = JSON.parse(raw);
               return;
@@ -1015,10 +1130,12 @@
         try {
           await apiRequest("/cards-bulk", {
             method: "PUT",
-            body: JSON.stringify({ cards: state.cards })
+            body: JSON.stringify({ setId: state.currentSetId, cards: state.cards })
           });
+          await loadSets();
+          renderSetSelector();
         } catch {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(state.cards));
+          localStorage.setItem(getSetStorageKey(STORAGE_KEY, state.currentSetId), JSON.stringify(state.cards));
         }
        }
 
@@ -1052,12 +1169,12 @@
       // ============================================================
       async function loadSettings() {
         try {
-          const data = await apiRequest("/settings");
+          const data = await apiRequest(`/settings?set_id=${encodeURIComponent(state.currentSetId)}`);
           state.settings = { ...defaultSettings, ...(data || {}) };
           return;
         } catch {
           try {
-            const raw = localStorage.getItem(SETTINGS_KEY);
+            const raw = localStorage.getItem(getSetStorageKey(SETTINGS_KEY, state.currentSetId));
             if (raw) {
               state.settings = { ...defaultSettings, ...JSON.parse(raw) };
               return;
@@ -1074,10 +1191,10 @@
         try {
           await apiRequest("/settings", {
             method: "PUT",
-            body: JSON.stringify(state.settings)
+            body: JSON.stringify({ ...state.settings, setId: state.currentSetId })
           });
         } catch {
-          localStorage.setItem(SETTINGS_KEY, JSON.stringify(state.settings));
+          localStorage.setItem(getSetStorageKey(SETTINGS_KEY, state.currentSetId), JSON.stringify(state.settings));
         }
         showManageMessage(message, "ok");
        }
@@ -1095,6 +1212,7 @@
         el.ttsSpanishRate.value = String(state.settings.ttsSpanishRate ?? 0.9);
         updateTtsRateLabel();
         updateSettingsVisibility();
+        renderSetSelector();
        }
 
       function readSettingsFromForm() {
@@ -1230,8 +1348,6 @@
 
         // Hide summary, show study UI
         el.summaryPanel.classList.add("hidden");
-        el.startBtn.classList.add("hidden");
-        el.resetSessionBtn.classList.remove("hidden");
 
         showNextCard();
        }
@@ -1402,48 +1518,11 @@
         el.scoreText.textContent = `${correct} richtig`;
         el.progressBar.style.width = "100%";
 
-        el.startBtn.classList.remove("hidden");
-        el.resetSessionBtn.classList.add("hidden");
-
         // Show summary
         el.summaryPanel.classList.remove("hidden");
         el.summaryText.innerHTML = `Du hast <strong>${total}</strong> Vokabeln gelernt – <strong>${correct}</strong> richtig (${accuracy}% Trefferquote). ${accuracy >= 80 ? "Ausgezeichnet! 🏆" : accuracy >= 60 ? "Gut gemacht! Weiter so! 💪" : "Übung macht den Meister! 📚"}`;
 
         updateStats();
-       }
-
-      function resetSession() {
-        clearInterval(state.session.timerId);
-        clearTimeout(state.session.autoFlipId);
-        state.session = {
-          queue: [],
-          currentIndex: 0,
-          reviewed: 0,
-          correct: 0,
-          isRunning: false,
-          flipped: false,
-          timerId: null,
-          autoFlipId: null,
-          timeLeft: 0,
-          currentCard: null
-         };
-
-        el.cardFrontText.textContent = "--";
-        el.cardBackText.textContent = "";
-        el.cardExampleFront.textContent = "";
-        el.cardExampleBack.textContent = "";
-        el.soundBackBtn.style.display = "none";
-        el.soundBackExampleBtn.style.display = "none";
-        resetCardToFrontInstant();
-        el.ratingButtons.classList.add("hidden");
-        el.nextBtn.classList.add("hidden");
-        el.summaryPanel.classList.add("hidden");
-        el.startBtn.classList.remove("hidden");
-        el.timerText.textContent = "--";
-        el.sessionInfo.textContent = "Druecke Start, um zu beginnen.";
-        el.progressText.textContent = "0 / 0";
-        el.scoreText.textContent = "0 richtig";
-        el.progressBar.style.width = "0%";
        }
 
       // ============================================================
@@ -1641,6 +1720,50 @@
          }
        }
 
+      async function handleCreateSet() {
+        const name = window.prompt("Name für neues Lernset:", "Neues Set");
+        if (name === null) return;
+        const trimmed = name.trim();
+        if (!trimmed) {
+          showManageMessage("Bitte gib einen gueltigen Set-Namen ein.", "error");
+          return;
+        }
+
+        try {
+          const created = await apiRequest("/sets", {
+            method: "POST",
+            body: JSON.stringify({ name: trimmed })
+          });
+          await loadSets();
+          renderSetSelector();
+          await switchSet(created.id, { skipConfirm: true });
+          showManageMessage(`Set "${trimmed}" erstellt und aktiviert.`, "ok");
+        } catch (err) {
+          showManageMessage("Set konnte nicht erstellt werden. Name eventuell bereits vorhanden.", "error");
+        }
+      }
+
+      async function handleDeleteCurrentSet() {
+        const currentSet = state.sets.find(s => s.id === state.currentSetId);
+        if (!currentSet || currentSet.id === DEFAULT_SET_ID) {
+          showManageMessage("Das Default-Set kann nicht geloescht werden.", "error");
+          return;
+        }
+
+        const confirmed = window.confirm(`Set "${currentSet.name}" mit allen Karten wirklich loeschen?`);
+        if (!confirmed) return;
+
+        try {
+          await apiRequest(`/sets/${encodeURIComponent(currentSet.id)}`, { method: "DELETE" });
+          await loadSets();
+          const fallbackSet = state.sets.find(s => s.id === DEFAULT_SET_ID) || state.sets[0];
+          await switchSet(fallbackSet?.id || DEFAULT_SET_ID, { skipConfirm: true, forceReload: true });
+          showManageMessage(`Set "${currentSet.name}" geloescht.`, "ok");
+        } catch {
+          showManageMessage("Set konnte nicht geloescht werden.", "error");
+        }
+      }
+
       // ============================================================
       // EVENT LISTENERS
       // ============================================================
@@ -1688,6 +1811,18 @@
         el.autoFlipEnabled.addEventListener("change", updateSettingsVisibility);
         el.timerEnabled.addEventListener("change", updateSettingsVisibility);
         el.ttsSpanishRate.addEventListener("input", updateTtsRateLabel);
+        el.setSelector.addEventListener("change", async () => {
+          const switched = await switchSet(el.setSelector.value);
+          if (!switched) {
+            renderSetSelector();
+          }
+        });
+        el.createSetBtn.addEventListener("click", () => {
+          void handleCreateSet();
+        });
+        el.deleteSetBtn.addEventListener("click", () => {
+          void handleDeleteCurrentSet();
+        });
 
         // Add card form
         el.addCardForm.addEventListener("submit", async (e) => {
@@ -1735,8 +1870,6 @@
          });
 
         // Session controls
-        el.startBtn.addEventListener("click", startSession);
-        el.resetSessionBtn.addEventListener("click", resetSession);
         el.newSessionBtn.addEventListener("click", () => {
           el.summaryPanel.classList.add("hidden");
           startSession();
@@ -1754,6 +1887,12 @@
       // INITIALIZATION
       // ============================================================
       async function init() {
+        await loadSets();
+        const savedSetId = normalizeSetId(localStorage.getItem(ACTIVE_SET_KEY));
+        state.currentSetId = state.sets.some(s => s.id === savedSetId)
+          ? savedSetId
+          : (state.sets[0]?.id || DEFAULT_SET_ID);
+
         await loadSettings();
         populateSpanishVoices();
         if (window.speechSynthesis) {
@@ -1763,6 +1902,7 @@
         await loadCards();
         updateStats();
         setupEventListeners();
+        startSession();
        }
 
       // Make deleteCard available globally for inline onclick handlers
