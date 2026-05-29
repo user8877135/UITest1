@@ -753,6 +753,19 @@
         return "";
       }
 
+      function resolveBackExampleText(card) {
+        const backKey = String(card?.back || "").trim().toLowerCase();
+        if (card?.exampleEs) return card.exampleEs;
+
+        // If the back is Spanish vocabulary, prefer Spanish example generation and
+        // avoid falling back to a potentially German front-side sentence.
+        if (spanishExampleByBack[backKey]) {
+          return getSpanishExampleForCard(card) || "";
+        }
+
+        return card?.example || "";
+      }
+
       // ============================================================
       // STATE
       // ============================================================
@@ -1110,11 +1123,30 @@
       }
 
       function detectSpeechLanguage(side, card) {
+        const normalize = value => String(value || "").trim().toLowerCase();
+        const backText = normalize(el.cardBackText?.textContent);
+        const backExampleText = normalize(el.cardExampleBack?.textContent);
+        const cardBack = normalize(card?.back);
+        const cardExample = normalize(card?.example);
+        const cardExampleEs = normalize(card?.exampleEs);
+
+        // If back content matches known Spanish vocabulary or Spanish example field, force Spanish TTS.
+        if (side === "back") {
+          if (backText && backText === cardBack && spanishExampleByBack[backText]) return "es-ES";
+          if (backText && spanishExampleByBack[backText]) return "es-ES";
+        }
+
+        if (side === "backExample") {
+          if (backExampleText && cardExampleEs && backExampleText === cardExampleEs) return "es-ES";
+          if (backExampleText && /[¿¡ñáéíóú]/i.test(backExampleText)) return "es-ES";
+          if (backExampleText && /\b(yo|tu|el|la|los|las|de|en|con|para|por|hoy|tengo|quiero|voy|estoy)\b/i.test(backExampleText)) return "es-ES";
+          if (backExampleText && cardExample && backExampleText === cardExample) return "de-DE";
+        }
+
+        // Fallback to previous direction-based behavior if content is ambiguous.
         const isDeToForeign = state.settings.languageDirection === "de-en";
         const foreign = detectForeignLanguage(card);
-        if (side === "front") {
-          return isDeToForeign ? "de-DE" : foreign;
-        }
+        if (side === "front") return isDeToForeign ? "de-DE" : foreign;
         return isDeToForeign ? foreign : "de-DE";
       }
 
@@ -1226,10 +1258,9 @@
         el.cardFrontText.textContent = card.front;
         el.cardBackText.textContent = card.back;
         el.cardExampleFront.textContent = card.example || "";
-        el.cardExampleBack.textContent = card.exampleEs || "";
+        el.cardExampleBack.textContent = resolveBackExampleText(card);
 
         // Sound buttons
-        const showSound = state.settings.soundEnabled;
         el.soundBackBtn.style.display = "none"; // Show after flip
         el.soundBackExampleBtn.style.display = "none"; // Show after flip
 
@@ -1302,11 +1333,9 @@
           el.ratingButtons.classList.remove("hidden");
          }, 350);
 
-        // Show sound button on back
-        if (state.settings.soundEnabled) {
-          el.soundBackBtn.style.display = "inline-flex";
-          el.soundBackExampleBtn.style.display = el.cardExampleBack.textContent.trim() ? "inline-flex" : "none";
-         }
+        // Show sound buttons on back side when text exists.
+        el.soundBackBtn.style.display = el.cardBackText.textContent.trim() ? "inline-flex" : "none";
+        el.soundBackExampleBtn.style.display = el.cardExampleBack.textContent.trim() ? "inline-flex" : "none";
        }
 
       async function rateCard(quality) {
@@ -1579,7 +1608,7 @@
       // TEXT-TO-SPEECH
       // ============================================================
       function speakText(side) {
-        if (!state.settings.soundEnabled || !state.session.currentCard) return;
+        if (!state.session.currentCard || !("speechSynthesis" in window)) return;
         let text = "";
         if (side === "back") {
           text = el.cardBackText.textContent.trim();
