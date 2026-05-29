@@ -1,0 +1,1748 @@
+<!doctype html>
+<html lang="de">
+   <head>
+     <meta charset="UTF-8" />
+     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+     <title>Vokabel Trainer</title>
+     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+     <link rel="preconnect" href="https://fonts.googleapis.com" />
+     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700;800&display=swap" rel="stylesheet" />
+     <style>
+       :root {
+         --bg-a: #f5f3ff;
+         --bg-b: #ede9fe;
+         --bg-c: #a78bfa;
+         --ink: #1e1b4b;
+       }
+
+      body {
+        font-family: "Space Grotesk", sans-serif;
+       }
+
+       @keyframes popIn {
+         0% {
+          opacity: 0;
+          transform: translateY(8px) scale(0.98);
+         }
+
+         100% {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+         }
+       }
+
+      @keyframes cardFlip {
+         0% {
+          transform: rotateY(0deg);
+         }
+
+         100% {
+          transform: rotateY(180deg);
+         }
+       }
+
+      @keyframes cardFlipBack {
+         0% {
+          transform: rotateY(180deg);
+         }
+
+         100% {
+          transform: rotateY(0deg);
+         }
+       }
+
+      @keyframes pulseOk {
+         0% {
+          box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.45);
+         }
+
+         100% {
+          box-shadow: 0 0 0 24px rgba(16, 185, 129, 0);
+         }
+       }
+
+      @keyframes pulseBad {
+         0% {
+          box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.45);
+         }
+
+         100% {
+          box-shadow: 0 0 0 24px rgba(244, 63, 94, 0);
+         }
+       }
+
+      @keyframes slideUp {
+         0% {
+          opacity: 0;
+          transform: translateY(16px);
+         }
+
+         100% {
+          opacity: 1;
+          transform: translateY(0);
+         }
+       }
+
+      .animate-pop {
+        animation: popIn 280ms ease-out;
+       }
+
+      .animate-slide-up {
+        animation: slideUp 350ms ease-out;
+       }
+
+      .pulse-ok {
+        animation: pulseOk 500ms ease-out;
+       }
+
+      .pulse-bad {
+        animation: pulseBad 500ms ease-out;
+       }
+
+      .card-scene {
+        perspective: 800px;
+       }
+
+      .card-inner {
+        transition: transform 0.6s ease;
+        transform-style: preserve-3d;
+       }
+
+      .card-inner.no-flip-transition {
+        transition: none;
+      }
+
+      .card-inner.flipped {
+        transform: rotateY(180deg);
+       }
+
+      .card-face {
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+       }
+
+      .card-back {
+        transform: rotateY(180deg);
+       }
+
+      /* Custom scrollbar for card list */
+      .card-list-scroll::-webkit-scrollbar {
+        width: 6px;
+       }
+
+      .card-list-scroll::-webkit-scrollbar-track {
+        background: transparent;
+       }
+
+      .card-list-scroll::-webkit-scrollbar-thumb {
+        background: #c4b5fd;
+        border-radius: 3px;
+       }
+
+      /* Tag pill styles */
+      .tag-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        border-radius: 9999px;
+        padding: 0.125rem 0.5rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+       }
+     </style>
+   </head>
+   <body
+    class="min-h-screen bg-[radial-gradient(circle_at_top,_var(--bg-a),_var(--bg-b)_48%,_var(--bg-c)_100%)] px-4 py-8 text-[color:var(--ink)] sm:px-8"
+   >
+     <main class="mx-auto w-full max-w-5xl space-y-5">
+
+       <!-- HEADER -->
+       <header class="animate-pop rounded-3xl border border-violet-200/80 bg-white/80 p-5 shadow-xl shadow-violet-900/10 backdrop-blur">
+         <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+           <div>
+             <p class="text-xs font-bold uppercase tracking-[0.22em] text-violet-700">Sprachen Lernen</p>
+             <h1 class="text-3xl font-bold sm:text-4xl">Vokabel Trainer</h1>
+             <p class="mt-1 text-sm text-violet-900/80">Lerne Vokabeln mit intervallbasierter Wiederholung – ähnlich wie Anki.</p>
+           </div>
+           <div class="flex flex-wrap gap-2">
+             <button
+              id="toggleSettingsBtn"
+              type="button"
+              class="rounded-2xl border border-violet-300 bg-violet-50 px-4 py-2 text-sm font-semibold text-violet-900 transition hover:bg-violet-100 focus:outline-none focus:ring-4 focus:ring-violet-300/70"
+             >
+              Einstellungen
+             </button>
+             <button
+              id="toggleManageBtn"
+              type="button"
+              class="rounded-2xl border border-violet-300 bg-violet-50 px-4 py-2 text-sm font-semibold text-violet-900 transition hover:bg-violet-100 focus:outline-none focus:ring-4 focus:ring-violet-300/70"
+             >
+              Vokabeln verwalten
+             </button>
+           </div>
+         </div>
+
+         <!-- Stats Row -->
+         <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+           <div class="rounded-2xl bg-violet-50 px-4 py-3 text-center">
+             <p class="text-xs font-semibold text-violet-700">Heue zum Lernen</p>
+             <p id="statDue" class="mt-1 text-2xl font-black text-violet-900">0</p>
+           </div>
+           <div class="rounded-2xl bg-violet-50 px-4 py-3 text-center">
+             <p class="text-xs font-semibold text-violet-700">Gesamt</p>
+             <p id="statTotal" class="mt-1 text-2xl font-black text-violet-900">0</p>
+           </div>
+           <div class="rounded-2xl bg-violet-50 px-4 py-3 text-center">
+             <p class="text-xs font-semibold text-violet-700">Heute gelernt</p>
+             <p id="statReviewed" class="mt-1 text-2xl font-black text-emerald-600">0</p>
+           </div>
+           <div class="rounded-2xl bg-violet-50 px-4 py-3 text-center">
+             <p class="text-xs font-semibold text-violet-700">Trefferquote</p>
+             <p id="statAccuracy" class="mt-1 text-2xl font-black text-emerald-600">--%</p>
+           </div>
+         </div>
+       </header>
+
+       <!-- SETTINGS PANEL -->
+       <section
+        id="settingsPanel"
+        class="hidden animate-pop rounded-3xl border border-violet-200/80 bg-white/90 p-5 shadow-lg shadow-violet-900/10 backdrop-blur"
+       >
+         <h2 class="mb-4 text-xl font-bold">Einstellungen</h2>
+
+         <form id="settingsForm" class="grid grid-cols-1 gap-4 md:grid-cols-2">
+           <label class="flex flex-col gap-2 text-sm font-medium">
+            Vokabeln pro Sitzung
+             <input
+              id="cardsPerSession"
+              type="number"
+              min="1"
+              max="200"
+              value="20"
+              class="rounded-xl border border-violet-200 bg-white px-3 py-2 font-semibold focus:outline-none focus:ring-4 focus:ring-violet-300/70"
+             />
+           </label>
+
+           <label class="flex flex-col gap-2 text-sm font-medium">
+            Sprachrichtung (Standard)
+             <select
+              id="languageDirection"
+              class="rounded-xl border border-violet-200 bg-white px-3 py-2 font-semibold focus:outline-none focus:ring-4 focus:ring-violet-300/70"
+             >
+               <option value="de-en">Deutsch → Englisch</option>
+               <option value="en-de">Englisch → Deutsch</option>
+             </select>
+           </label>
+
+           <label class="flex items-center gap-3 rounded-xl bg-violet-50 px-3 py-2 text-sm font-medium">
+             <input id="autoFlipEnabled" type="checkbox" class="h-4 w-4 accent-violet-600" />
+            Automatisch umdrehen nach (Sekunden)
+           </label>
+
+           <label class="flex flex-col gap-2 text-sm font-medium" id="autoFlipSecondsWrap">
+            Sekunden
+             <input
+              id="autoFlipSeconds"
+              type="number"
+              min="3"
+              max="60"
+              value="10"
+              class="rounded-xl border border-violet-200 bg-white px-3 py-2 font-semibold focus:outline-none focus:ring-4 focus:ring-violet-300/70"
+             />
+           </label>
+
+           <label class="flex items-center gap-3 rounded-xl bg-violet-50 px-3 py-2 text-sm font-medium">
+             <input id="timerEnabled" type="checkbox" class="h-4 w-4 accent-violet-600" />
+            Zeitlimit je Karte
+           </label>
+
+           <label class="flex flex-col gap-2 text-sm font-medium" id="timerSecondsWrap">
+            Zeitlimit (Sekunden)
+             <input
+              id="timerSeconds"
+              type="number"
+              min="5"
+              max="300"
+              value="30"
+              class="rounded-xl border border-violet-200 bg-white px-3 py-2 font-semibold focus:outline-none focus:ring-4 focus:ring-violet-300/70"
+             />
+           </label>
+
+           <label class="flex items-center gap-3 rounded-xl bg-violet-50 px-3 py-2 text-sm font-medium">
+             <input id="bidirectionalCards" type="checkbox" checked class="h-4 w-4 accent-violet-600" />
+            Bidirektionale Karten erstellen (beide Richtungen lernen)
+           </label>
+
+           <label class="flex items-center gap-3 rounded-xl bg-violet-50 px-3 py-2 text-sm font-medium">
+             <input id="soundEnabled" type="checkbox" class="h-4 w-4 accent-violet-600" />
+            Aussprache vorlesen (Text-to-Speech)
+           </label>
+
+           <label class="flex flex-col gap-2 text-sm font-medium">
+            Spanische Stimme
+             <select
+              id="ttsSpanishVoice"
+              class="rounded-xl border border-violet-200 bg-white px-3 py-2 font-semibold focus:outline-none focus:ring-4 focus:ring-violet-300/70"
+             >
+              <option value="">Automatisch (beste spanische Stimme)</option>
+             </select>
+           </label>
+
+           <label class="flex flex-col gap-2 text-sm font-medium">
+            Spanisches Sprechtempo
+             <input
+              id="ttsSpanishRate"
+              type="range"
+              min="0.6"
+              max="1.4"
+              step="0.05"
+              value="0.9"
+              class="accent-violet-600"
+             />
+             <span id="ttsSpanishRateLabel" class="text-xs font-semibold text-violet-700">0.90x</span>
+           </label>
+
+           <div class="md:col-span-2 flex flex-wrap gap-3 pt-1">
+             <button
+              id="saveSettingsBtn"
+              type="button"
+              class="rounded-2xl bg-violet-700 px-5 py-2 text-sm font-semibold text-white transition hover:bg-violet-800 focus:outline-none focus:ring-4 focus:ring-violet-300/70"
+             >
+              Einstellungen speichern
+             </button>
+             <button
+              id="resetSettingsBtn"
+              type="button"
+              class="rounded-2xl border border-violet-300 bg-white px-5 py-2 text-sm font-semibold text-violet-900 transition hover:bg-violet-50 focus:outline-none focus:ring-4 focus:ring-violet-300/70"
+             >
+              Zurücksetzen
+             </button>
+           </div>
+         </form>
+
+         <p id="settingsMessage" class="mt-4 rounded-xl bg-violet-50 px-3 py-2 text-sm font-semibold text-violet-900" role="status" aria-live="polite">
+          Passe die Einstellungen an und starte dann eine Lernsitzung.
+         </p>
+       </section>
+
+       <!-- CARD MANAGEMENT PANEL -->
+       <section
+        id="managePanel"
+        class="hidden animate-pop rounded-3xl border border-violet-200/80 bg-white/90 p-5 shadow-lg shadow-violet-900/10 backdrop-blur"
+       >
+         <h2 class="mb-4 text-xl font-bold">Vokabeln verwalten</h2>
+
+         <!-- Add Card Form -->
+         <form id="addCardForm" class="mb-5 grid grid-cols-1 gap-3 rounded-2xl bg-violet-50 p-4 md:grid-cols-2">
+           <div class="md:col-span-2">
+             <h3 class="text-sm font-bold uppercase tracking-[0.15em] text-violet-700">Neue Vokabel hinzufügen</h3>
+           </div>
+
+           <label class="flex flex-col gap-1 text-sm font-medium">
+            Vorderseite (z.B. Deutsch)
+             <input
+              id="cardFront"
+              type="text"
+              placeholder="Haus"
+              required
+              class="rounded-xl border border-violet-200 bg-white px-3 py-2 font-semibold focus:outline-none focus:ring-4 focus:ring-violet-300/70"
+             />
+           </label>
+
+           <label class="flex flex-col gap-1 text-sm font-medium">
+            Rückseite (z.B. Englisch)
+             <input
+              id="cardBack"
+              type="text"
+              placeholder="House"
+              required
+              class="rounded-xl border border-violet-200 bg-white px-3 py-2 font-semibold focus:outline-none focus:ring-4 focus:ring-violet-300/70"
+             />
+           </label>
+
+           <label class="flex flex-col gap-1 text-sm font-medium">
+            Beispielsatz (optional)
+             <input
+              id="cardExample"
+              type="text"
+              placeholder="Das Haus ist groß."
+              class="rounded-xl border border-violet-200 bg-white px-3 py-2 font-semibold focus:outline-none focus:ring-4 focus:ring-violet-300/70"
+             />
+           </label>
+
+           <label class="flex flex-col gap-1 text-sm font-medium">
+            Tags (kommagetrennt)
+             <input
+              id="cardTags"
+              type="text"
+              placeholder="Wohnen, Nomen"
+              class="rounded-xl border border-violet-200 bg-white px-3 py-2 font-semibold focus:outline-none focus:ring-4 focus:ring-violet-300/70"
+             />
+           </label>
+
+           <div class="md:col-span-2 flex flex-wrap gap-3">
+             <button
+              id="addCardBtn"
+              type="submit"
+              class="rounded-2xl bg-emerald-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-300/70"
+             >
+              Vokabel hinzufügen
+             </button>
+             <button
+              id="importBtn"
+              type="button"
+              class="rounded-2xl border border-violet-300 bg-white px-5 py-2 text-sm font-semibold text-violet-900 transition hover:bg-violet-50 focus:outline-none focus:ring-4 focus:ring-violet-300/70"
+             >
+              Importieren (JSON)
+             </button>
+             <button
+              id="exportBtn"
+              type="button"
+              class="rounded-2xl border border-violet-300 bg-white px-5 py-2 text-sm font-semibold text-violet-900 transition hover:bg-violet-50 focus:outline-none focus:ring-4 focus:ring-violet-300/70"
+             >
+              Exportieren (JSON)
+             </button>
+           </div>
+         </form>
+
+         <!-- Filter & Search -->
+         <div class="mb-3 flex flex-wrap gap-3">
+           <input
+            id="searchCards"
+            type="text"
+            placeholder="Vokabeln durchsuchen…"
+            class="flex-1 rounded-xl border border-violet-200 bg-white px-3 py-2 text-sm font-semibold focus:outline-none focus:ring-4 focus:ring-violet-300/70"
+           />
+           <select
+            id="filterTag"
+            class="rounded-xl border border-violet-200 bg-white px-3 py-2 text-sm font-semibold focus:outline-none focus:ring-4 focus:ring-violet-300/70"
+           >
+             <option value="">Alle Tags</option>
+           </select>
+           <select
+            id="filterStatus"
+            class="rounded-xl border border-violet-200 bg-white px-3 py-2 text-sm font-semibold focus:outline-none focus:ring-4 focus:ring-violet-300/70"
+           >
+             <option value="">Alle Status</option>
+             <option value="new">Neu</option>
+             <option value="learning">Lernend</option>
+             <option value="graduated">Beherrscht</option>
+             <option value="due">Heue fällig</option>
+           </select>
+         </div>
+
+         <!-- Card List -->
+         <div id="cardList" class="card-list-scroll max-h-[400px] overflow-y-auto space-y-2 rounded-2xl border border-violet-200 p-3">
+           <!-- Cards will be rendered here dynamically -->
+         </div>
+
+         <p id="manageMessage" class="mt-4 rounded-xl bg-violet-50 px-3 py-2 text-sm font-semibold text-violet-900" role="status" aria-live="polite">
+           Fuege neue Vokabeln hinzu oder verwalte bestehende.
+         </p>
+       </section>
+
+       <!-- STUDY CARD SECTION -->
+       <section class="animate-pop rounded-3xl border border-violet-200/80 bg-white/90 p-5 shadow-lg shadow-violet-900/10 backdrop-blur">
+         <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+           <div>
+             <p class="text-xs font-bold uppercase tracking-[0.2em] text-violet-700">Lernsitzung</p>
+             <p id="sessionInfo" class="mt-1 text-sm text-violet-900/80">Druecke Start, um zu beginnen.</p>
+           </div>
+           <div class="rounded-2xl bg-violet-50 px-4 py-2 text-right">
+             <p class="text-xs font-semibold text-violet-700">Zeit</p>
+             <p id="timerText" class="text-2xl font-bold text-violet-900">--</p>
+           </div>
+         </div>
+
+         <!-- Flashcard -->
+         <div id="flashcardArea" class="mb-5 flex justify-center">
+           <div class="card-scene aspect-[4/3] w-full max-w-xl cursor-pointer" id="cardScene">
+             <div class="card-inner relative h-full w-full" id="cardInner" style="transform-style: preserve-3d;">
+               <!-- Front Face -->
+               <div class="card-face absolute inset-0 rounded-3xl border-2 border-violet-300 bg-gradient-to-br from-violet-50 to-purple-100 p-8 text-center shadow-lg">
+                 <p class="mb-2 text-xs font-bold uppercase tracking-[0.2em] text-violet-600">Vorderseite</p>
+                 <p id="cardFrontText" class="mt-4 text-4xl font-black text-violet-900 sm:text-5xl">--</p>
+                 <p id="cardExampleFront" class="mt-3 text-sm italic text-violet-700"></p>
+                 <p class="mt-6 text-xs text-violet-500">Klicke zum Umdrehen</p>
+               </div>
+
+               <!-- Back Face -->
+               <div class="card-back card-face absolute inset-0 rounded-3xl border-2 border-emerald-300 bg-gradient-to-br from-emerald-50 to-teal-100 p-8 text-center shadow-lg">
+                 <p class="mb-2 text-xs font-bold uppercase tracking-[0.2em] text-emerald-600">Rückseite</p>
+                 <p id="cardBackText" class="mt-4 text-4xl font-black text-emerald-900 sm:text-5xl">--</p>
+                 <p id="cardExampleBack" class="mt-3 text-sm italic text-emerald-700"></p>
+                 <!-- Sound Button -->
+                 <button
+                  id="soundBackBtn"
+                  type="button"
+                  class="mt-3 inline-flex items-center gap-2 rounded-full bg-emerald-200 px-4 py-1.5 text-xs font-semibold text-emerald-800 transition hover:bg-emerald-300 focus:outline-none"
+                  onclick="event.stopPropagation(); speakText('back');"
+                  style="display: none;"
+                 >
+                  🔊 Vorlesen
+                 </button>
+                 <button
+                  id="soundBackExampleBtn"
+                  type="button"
+                  class="mt-2 inline-flex items-center gap-2 rounded-full bg-emerald-100 px-4 py-1.5 text-xs font-semibold text-emerald-900 transition hover:bg-emerald-200 focus:outline-none"
+                  onclick="event.stopPropagation(); speakText('backExample');"
+                  style="display: none;"
+                 >
+                  🔊 Beispielsatz
+                 </button>
+               </div>
+             </div>
+           </div>
+         </div>
+
+         <!-- Rating Buttons -->
+         <div id="ratingButtons" class="hidden mb-5 flex flex-wrap justify-center gap-3">
+           <button
+            data-rating="again"
+            type="button"
+            class="rounded-2xl border-2 border-rose-300 bg-rose-50 px-6 py-3 text-sm font-semibold text-rose-800 transition hover:bg-rose-100 focus:outline-none focus:ring-4 focus:ring-rose-300/70"
+           >
+            <span class="block text-xs">Wiederholen</span>
+            <span class="block font-black">&lt; 1 Min</span>
+           </button>
+           <button
+            data-rating="hard"
+            type="button"
+            class="rounded-2xl border-2 border-orange-300 bg-orange-50 px-6 py-3 text-sm font-semibold text-orange-800 transition hover:bg-orange-100 focus:outline-none focus:ring-4 focus:ring-orange-300/70"
+           >
+            <span class="block text-xs">Schwer</span>
+            <span class="block font-black" id="hardInterval">6 Min</span>
+           </button>
+           <button
+            data-rating="good"
+            type="button"
+            class="rounded-2xl border-2 border-blue-300 bg-blue-50 px-6 py-3 text-sm font-semibold text-blue-800 transition hover:bg-blue-100 focus:outline-none focus:ring-4 focus:ring-blue-300/70"
+           >
+            <span class="block text-xs">Gut</span>
+            <span class="block font-black" id="goodInterval">10 Min</span>
+           </button>
+           <button
+            data-rating="easy"
+            type="button"
+            class="rounded-2xl border-2 border-emerald-300 bg-emerald-50 px-6 py-3 text-sm font-semibold text-emerald-800 transition hover:bg-emerald-100 focus:outline-none focus:ring-4 focus:ring-emerald-300/70"
+           >
+            <span class="block text-xs">Leicht</span>
+            <span class="block font-black" id="easyInterval">1 Std</span>
+           </button>
+         </div>
+
+         <!-- Progress -->
+         <div class="mb-4">
+           <div class="mb-2 flex items-center justify-between text-sm font-semibold text-violet-900">
+             <span id="progressText">0 / 0</span>
+             <span id="scoreText">0 richtig</span>
+           </div>
+           <div class="h-3 overflow-hidden rounded-full bg-violet-100">
+             <div id="progressBar" class="h-full w-0 rounded-full bg-violet-600 transition-all duration-300"></div>
+           </div>
+         </div>
+
+         <!-- Session Controls -->
+         <div class="flex flex-wrap gap-3">
+           <button
+            id="startBtn"
+            type="button"
+            class="rounded-2xl bg-emerald-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-300/70"
+           >
+            Start
+           </button>
+           <button
+            id="nextBtn"
+            type="button"
+            class="hidden rounded-2xl border border-violet-300 bg-white px-5 py-2 text-sm font-semibold text-violet-900 transition hover:bg-violet-50 focus:outline-none focus:ring-4 focus:ring-violet-300/70"
+           >
+            Nächste Karte →
+           </button>
+           <button
+            id="resetSessionBtn"
+            type="button"
+            class="rounded-2xl border border-violet-300 bg-white px-5 py-2 text-sm font-semibold text-violet-900 transition hover:bg-violet-50 focus:outline-none focus:ring-4 focus:ring-violet-300/70"
+           >
+            Sitzung zurücksetzen
+           </button>
+         </div>
+       </section>
+
+       <!-- SUMMARY PANEL -->
+       <section id="summaryPanel" class="hidden animate-pop rounded-3xl border border-emerald-200/80 bg-emerald-50/80 p-5 shadow-lg shadow-emerald-900/10">
+         <h2 class="text-2xl font-bold text-emerald-900">Sitzung abgeschlossen!</h2>
+         <p id="summaryText" class="mt-2 text-sm font-semibold text-emerald-900"></p>
+         <div class="mt-4 flex flex-wrap gap-3">
+           <button
+            id="newSessionBtn"
+            type="button"
+            class="rounded-2xl bg-violet-700 px-5 py-2 text-sm font-semibold text-white transition hover:bg-violet-800 focus:outline-none focus:ring-4 focus:ring-violet-300/70"
+           >
+             Neue Sitzung starten
+           </button>
+         </div>
+       </section>
+
+     </main>
+
+     <script>
+      // ============================================================
+      // CONSTANTS & DEFAULTS
+      // ============================================================
+      const STORAGE_KEY = "vocabTrainerCardsV1";
+      const SETTINGS_KEY = "vocabTrainerSettingsV1";
+      const SESSION_KEY = "vocabTrainerSessionV1";
+      const API_BASE = "/api";
+
+      const defaultSettings = {
+        cardsPerSession: 20,
+        languageDirection: "de-en",
+        autoFlipEnabled: false,
+        autoFlipSeconds: 10,
+        timerEnabled: false,
+        timerSeconds: 30,
+        bidirectionalCards: true,
+        soundEnabled: false,
+        ttsSpanishVoice: "",
+        ttsSpanishRate: 0.9
+       };
+
+      // ============================================================
+      // DEFAULT VOCABULARY (Spanish A1 starter set)
+      // ============================================================
+      const defaultVocabulary = [
+        { front: "sein (dauerhaft)", back: "ser", example: "Ich bin Student.", tags: ["Spanisch", "Verb", "A1"] },
+        { front: "sein (Zustand)", back: "estar", example: "Ich bin heute muede.", tags: ["Spanisch", "Verb", "A1"] },
+        { front: "haben", back: "tener", example: "Ich habe ein Buch.", tags: ["Spanisch", "Verb", "A1"] },
+        { front: "machen, tun", back: "hacer", example: "Ich mache die Hausaufgaben.", tags: ["Spanisch", "Verb", "A1"] },
+        { front: "koennen", back: "poder", example: "Ich kann jetzt helfen.", tags: ["Spanisch", "Verb", "A1"] },
+        { front: "wollen", back: "querer", example: "Ich will bitte Wasser.", tags: ["Spanisch", "Verb", "A1"] },
+        { front: "sagen", back: "decir", example: "Ich sage die Wahrheit.", tags: ["Spanisch", "Verb", "A1"] },
+        { front: "gehen, fahren", back: "ir", example: "Ich gehe nach Hause.", tags: ["Spanisch", "Verb", "A1"] },
+        { front: "kommen", back: "venir", example: "Ich komme aus Madrid.", tags: ["Spanisch", "Verb", "A1"] },
+        { front: "sprechen", back: "hablar", example: "Ich spreche mit Ana.", tags: ["Spanisch", "Verb", "A1"] },
+        { front: "essen", back: "comer", example: "Ich esse jeden Tag Brot.", tags: ["Spanisch", "Verb", "A1"] },
+        { front: "trinken", back: "beber", example: "Ich trinke kaltes Wasser.", tags: ["Spanisch", "Verb", "A1"] },
+        { front: "leben, wohnen", back: "vivir", example: "Ich wohne in Berlin.", tags: ["Spanisch", "Verb", "A1"] },
+        { front: "sehen", back: "ver", example: "Ich sehe fern.", tags: ["Spanisch", "Verb", "A1"] },
+        { front: "geben", back: "dar", example: "Ich gebe ein Geschenk.", tags: ["Spanisch", "Verb", "A1"] },
+        { front: "wissen", back: "saber", example: "Ich weiss die Antwort nicht.", tags: ["Spanisch", "Verb", "A1"] },
+        { front: "kennen", back: "conocer", example: "Ich kenne deinen Bruder.", tags: ["Spanisch", "Verb", "A1"] },
+        { front: "denken", back: "pensar", example: "Ich denke an dich.", tags: ["Spanisch", "Verb", "A1"] },
+        { front: "brauchen", back: "necesitar", example: "Ich brauche Zeit.", tags: ["Spanisch", "Verb", "A1"] },
+        { front: "arbeiten", back: "trabajar", example: "Ich arbeite in einem Hotel.", tags: ["Spanisch", "Verb", "A1"] },
+        { front: "Montag", back: "lunes", example: "Am Montag arbeite ich zu Hause.", tags: ["Spanisch", "Wochentag", "A1"] },
+        { front: "Dienstag", back: "martes", example: "Am Dienstag habe ich Unterricht.", tags: ["Spanisch", "Wochentag", "A1"] },
+        { front: "Mittwoch", back: "miercoles", example: "Am Mittwoch lerne ich Spanisch.", tags: ["Spanisch", "Wochentag", "A1"] },
+        { front: "Donnerstag", back: "jueves", example: "Am Donnerstag gehe ich ins Fitnessstudio.", tags: ["Spanisch", "Wochentag", "A1"] },
+        { front: "Freitag", back: "viernes", example: "Am Freitag treffe ich Freunde.", tags: ["Spanisch", "Wochentag", "A1"] },
+        { front: "Samstag", back: "sabado", example: "Am Samstag ruhe ich mich aus.", tags: ["Spanisch", "Wochentag", "A1"] },
+        { front: "Sonntag", back: "domingo", example: "Am Sonntag koche ich mit meiner Familie.", tags: ["Spanisch", "Wochentag", "A1"] },
+        { front: "Januar", back: "enero", example: "Im Januar ist es kalt.", tags: ["Spanisch", "Monat", "A1"] },
+        { front: "Februar", back: "febrero", example: "Im Februar lese ich mehr.", tags: ["Spanisch", "Monat", "A1"] },
+        { front: "Maerz", back: "marzo", example: "Im Maerz beginnt der Fruehling.", tags: ["Spanisch", "Monat", "A1"] },
+        { front: "April", back: "abril", example: "Im April regnet es viel.", tags: ["Spanisch", "Monat", "A1"] },
+        { front: "Mai", back: "mayo", example: "Im Mai reise ich nach Madrid.", tags: ["Spanisch", "Monat", "A1"] },
+        { front: "Juni", back: "junio", example: "Im Juni endet der Kurs.", tags: ["Spanisch", "Monat", "A1"] },
+        { front: "Juli", back: "julio", example: "Im Juli ist es warm.", tags: ["Spanisch", "Monat", "A1"] },
+        { front: "August", back: "agosto", example: "Im August habe ich Urlaub.", tags: ["Spanisch", "Monat", "A1"] },
+        { front: "September", back: "septiembre", example: "Im September beginne ich wieder mit der Arbeit.", tags: ["Spanisch", "Monat", "A1"] },
+        { front: "Oktober", back: "octubre", example: "Im Oktober trage ich eine Jacke.", tags: ["Spanisch", "Monat", "A1"] },
+        { front: "November", back: "noviembre", example: "Im November lerne ich jeden Tag.", tags: ["Spanisch", "Monat", "A1"] },
+        { front: "Dezember", back: "diciembre", example: "Im Dezember feiere ich Weihnachten.", tags: ["Spanisch", "Monat", "A1"] }
+       ];
+
+      const spanishExampleByBack = {
+        ser: "Yo soy estudiante.",
+        estar: "Estoy cansado hoy.",
+        tener: "Tengo un libro.",
+        hacer: "Hago la tarea.",
+        poder: "Puedo ayudar ahora.",
+        querer: "Quiero agua, por favor.",
+        decir: "Digo la verdad.",
+        ir: "Voy a casa.",
+        venir: "Vengo de Madrid.",
+        hablar: "Hablo con Ana.",
+        comer: "Como pan cada dia.",
+        beber: "Bebo agua fria.",
+        vivir: "Vivo en Berlin.",
+        ver: "Veo la tele.",
+        dar: "Doy un regalo.",
+        saber: "No se la respuesta.",
+        conocer: "Conozco a tu hermano.",
+        pensar: "Pienso en ti.",
+        necesitar: "Necesito tiempo.",
+        trabajar: "Trabajo en un hotel.",
+        lunes: "El lunes trabajo en casa.",
+        martes: "El martes tengo clase.",
+        miercoles: "El miercoles estudio espanol.",
+        jueves: "El jueves voy al gimnasio.",
+        viernes: "El viernes salgo con amigos.",
+        sabado: "El sabado descanso.",
+        domingo: "El domingo cocino con mi familia.",
+        enero: "En enero hace frio.",
+        febrero: "En febrero leo mas.",
+        marzo: "En marzo empieza la primavera.",
+        abril: "En abril llueve mucho.",
+        mayo: "En mayo viajo a Madrid.",
+        junio: "En junio termina el curso.",
+        julio: "En julio hace calor.",
+        agosto: "En agosto estoy de vacaciones.",
+        septiembre: "En septiembre vuelvo al trabajo.",
+        octubre: "En octubre llevo chaqueta.",
+        noviembre: "En noviembre estudio cada dia.",
+        diciembre: "En diciembre celebro la Navidad."
+      };
+
+      const spanishByGermanFront = {
+        "sein (dauerhaft)": "ser",
+        "sein (zustand)": "estar",
+        haben: "tener",
+        "machen, tun": "hacer",
+        koennen: "poder",
+        wollen: "querer",
+        sagen: "decir",
+        "gehen, fahren": "ir",
+        kommen: "venir",
+        sprechen: "hablar",
+        essen: "comer",
+        trinken: "beber",
+        "leben, wohnen": "vivir",
+        sehen: "ver",
+        geben: "dar",
+        wissen: "saber",
+        kennen: "conocer",
+        denken: "pensar",
+        brauchen: "necesitar",
+        arbeiten: "trabajar",
+        montag: "lunes",
+        dienstag: "martes",
+        mittwoch: "miercoles",
+        donnerstag: "jueves",
+        freitag: "viernes",
+        samstag: "sabado",
+        sonntag: "domingo",
+        januar: "enero",
+        februar: "febrero",
+        maerz: "marzo",
+        april: "abril",
+        mai: "mayo",
+        juni: "junio",
+        juli: "julio",
+        august: "agosto",
+        september: "septiembre",
+        oktober: "octubre",
+        november: "noviembre",
+        dezember: "diciembre"
+      };
+
+      function getSpanishExampleForCard(card) {
+        const backKey = String(card?.back || "").trim().toLowerCase();
+        if (spanishExampleByBack[backKey]) {
+          return spanishExampleByBack[backKey];
+        }
+
+        const frontKey = String(card?.front || "").trim().toLowerCase();
+        const spanishBack = spanishByGermanFront[frontKey];
+        if (spanishBack && spanishExampleByBack[spanishBack]) {
+          return spanishExampleByBack[spanishBack];
+        }
+
+        return "";
+      }
+
+      // ============================================================
+      // STATE
+      // ============================================================
+      const state = {
+        cards: [],
+        settings: { ...defaultSettings },
+        session: {
+          queue: [],
+          currentIndex: 0,
+          reviewed: 0,
+          correct: 0,
+          isRunning: false,
+          flipped: false,
+          timerId: null,
+          autoFlipId: null,
+          timeLeft: 0,
+          currentCard: null
+        }
+       };
+
+      async function apiRequest(path, options = {}) {
+        const response = await fetch(`${API_BASE}${path}`, {
+          headers: {
+            "Content-Type": "application/json",
+            ...(options.headers || {})
+          },
+          ...options
+        });
+
+        if (!response.ok) {
+          const text = await response.text();
+          throw new Error(text || `HTTP ${response.status}`);
+        }
+
+        if (response.status === 204) return null;
+        return response.json();
+      }
+
+      // ============================================================
+      // DOM REFERENCES
+      // ============================================================
+      const el = {
+        // Header stats
+        statDue: document.getElementById("statDue"),
+        statTotal: document.getElementById("statTotal"),
+        statReviewed: document.getElementById("statReviewed"),
+        statAccuracy: document.getElementById("statAccuracy"),
+
+        // Settings
+        toggleSettingsBtn: document.getElementById("toggleSettingsBtn"),
+        settingsPanel: document.getElementById("settingsPanel"),
+        settingsForm: document.getElementById("settingsForm"),
+        settingsMessage: document.getElementById("settingsMessage"),
+        cardsPerSession: document.getElementById("cardsPerSession"),
+        languageDirection: document.getElementById("languageDirection"),
+        autoFlipEnabled: document.getElementById("autoFlipEnabled"),
+        autoFlipSecondsWrap: document.getElementById("autoFlipSecondsWrap"),
+        autoFlipSeconds: document.getElementById("autoFlipSeconds"),
+        timerEnabled: document.getElementById("timerEnabled"),
+        timerSecondsWrap: document.getElementById("timerSecondsWrap"),
+        timerSeconds: document.getElementById("timerSeconds"),
+        bidirectionalCards: document.getElementById("bidirectionalCards"),
+        soundEnabled: document.getElementById("soundEnabled"),
+        ttsSpanishVoice: document.getElementById("ttsSpanishVoice"),
+        ttsSpanishRate: document.getElementById("ttsSpanishRate"),
+        ttsSpanishRateLabel: document.getElementById("ttsSpanishRateLabel"),
+        saveSettingsBtn: document.getElementById("saveSettingsBtn"),
+        resetSettingsBtn: document.getElementById("resetSettingsBtn"),
+
+        // Manage
+        toggleManageBtn: document.getElementById("toggleManageBtn"),
+        managePanel: document.getElementById("managePanel"),
+        addCardForm: document.getElementById("addCardForm"),
+        cardFront: document.getElementById("cardFront"),
+        cardBack: document.getElementById("cardBack"),
+        cardExample: document.getElementById("cardExample"),
+        cardTags: document.getElementById("cardTags"),
+        addCardBtn: document.getElementById("addCardBtn"),
+        importBtn: document.getElementById("importBtn"),
+        exportBtn: document.getElementById("exportBtn"),
+        searchCards: document.getElementById("searchCards"),
+        filterTag: document.getElementById("filterTag"),
+        filterStatus: document.getElementById("filterStatus"),
+        cardList: document.getElementById("cardList"),
+        manageMessage: document.getElementById("manageMessage"),
+
+        // Study
+        sessionInfo: document.getElementById("sessionInfo"),
+        timerText: document.getElementById("timerText"),
+        cardScene: document.getElementById("cardScene"),
+        cardInner: document.getElementById("cardInner"),
+        cardFrontText: document.getElementById("cardFrontText"),
+        cardBackText: document.getElementById("cardBackText"),
+        cardExampleFront: document.getElementById("cardExampleFront"),
+        cardExampleBack: document.getElementById("cardExampleBack"),
+        soundBackBtn: document.getElementById("soundBackBtn"),
+        soundBackExampleBtn: document.getElementById("soundBackExampleBtn"),
+        ratingButtons: document.getElementById("ratingButtons"),
+        hardInterval: document.getElementById("hardInterval"),
+        goodInterval: document.getElementById("goodInterval"),
+        easyInterval: document.getElementById("easyInterval"),
+        progressText: document.getElementById("progressText"),
+        scoreText: document.getElementById("scoreText"),
+        progressBar: document.getElementById("progressBar"),
+        startBtn: document.getElementById("startBtn"),
+        nextBtn: document.getElementById("nextBtn"),
+        resetSessionBtn: document.getElementById("resetSessionBtn"),
+
+        // Summary
+        summaryPanel: document.getElementById("summaryPanel"),
+        summaryText: document.getElementById("summaryText"),
+        newSessionBtn: document.getElementById("newSessionBtn")
+       };
+
+      // ============================================================
+      // SM-2 ALGORITHM
+      // ============================================================
+      function sm2Update(card, quality) {
+        // quality: 0=Again, 1=Hard, 2=Good, 3=Easy
+        let { ease = 2.5, interval = 0, repetitions = 0 } = card;
+
+        if (quality === 0) {
+          // Again: reset repetitions, schedule for < 1 minute
+          repetitions = 0;
+          interval = 0;
+          // We'll handle sub-minute scheduling separately
+          return { ease, interval, repetitions, minutes: 0.15 }; // ~9 seconds
+         }
+
+        if (quality === 1) {
+          // Hard: reduce ease slightly, short interval
+          ease = Math.max(1.3, ease - 0.15);
+          if (repetitions === 0) {
+            interval = 1 / 6; // ~10 minutes in days
+           } else {
+            interval = Math.max(1 / 6, interval * 1.2);
+           }
+          repetitions += 1;
+          const minutes = interval * 24 * 60;
+          return { ease, interval, repetitions, minutes };
+         }
+
+        if (quality === 2) {
+          // Good: standard SM-2 step
+          if (repetitions === 0) {
+            interval = 1 / 24; // 1 hour in days
+           } else if (repetitions === 1) {
+            interval = 1; // 1 day
+           } else {
+            interval = Math.round((interval * ease) * 10) / 10;
+           }
+          repetitions += 1;
+          const minutes = interval * 24 * 60;
+          return { ease, interval, repetitions, minutes };
+         }
+
+        if (quality === 3) {
+          // Easy: boost ease and interval
+          ease += 0.15;
+          if (repetitions === 0) {
+            interval = 2 / 24; // 2 hours in days
+           } else if (repetitions === 1) {
+            interval = 4; // 4 days
+           } else {
+            interval = Math.round((interval * ease * 1.3) * 10) / 10;
+           }
+          repetitions += 1;
+          const minutes = interval * 24 * 60;
+          return { ease, interval, repetitions, minutes };
+         }
+
+        return { ease, interval, repetitions, minutes: 0 };
+       }
+
+      function formatInterval(minutes) {
+        if (minutes < 1) return "< 1 Min";
+        if (minutes < 60) return Math.round(minutes) + " Min";
+        if (minutes < 1440) return Math.round(minutes / 60) + " Std";
+        const days = Math.round(minutes / 1440);
+        return days + " Tag" + (days !== 1 ? "e" : "");
+       }
+
+      function getNextReviewDate(minutes) {
+        const date = new Date();
+        date.setMinutes(date.getMinutes() + minutes);
+        return date.toISOString();
+       }
+
+      function isCardDue(card) {
+        if (!card.nextReview) return true; // New card
+        return new Date(card.nextReview) <= new Date();
+       }
+
+      function getCardStatus(card) {
+        if (card.repetitions === 0 && !card.lastReview) return "new";
+        if (card.repetitions > 0 && card.interval < 1) return "learning";
+        if (card.repetitions >= 3 && card.interval >= 1) return "graduated";
+        return "learning";
+       }
+
+      // ============================================================
+      // CARD MANAGEMENT
+      // ============================================================
+      function createCard(front, back, example = "", tags = []) {
+        return {
+          id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+          front,
+          back,
+          example,
+          exampleEs: spanishExampleByBack[String(back || "").trim().toLowerCase()] || "",
+          tags,
+          ease: 2.5,
+          interval: 0,
+          repetitions: 0,
+          nextReview: null,
+          lastReview: null,
+          createdAt: new Date().toISOString()
+         };
+       }
+
+      async function loadCards() {
+        try {
+          const cards = await apiRequest("/cards");
+          state.cards = Array.isArray(cards) ? cards : [];
+          return;
+        } catch {
+          try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (raw) {
+              state.cards = JSON.parse(raw);
+              return;
+            }
+          } catch {
+            // ignore fallback errors
+          }
+        }
+
+        state.cards = defaultVocabulary.map(v => {
+          const card = createCard(v.front, v.back, v.example, v.tags);
+          card.exampleEs = v.exampleEs || spanishExampleByBack[String(v.back || "").trim().toLowerCase()] || "";
+          return card;
+        });
+        await saveCards();
+       }
+
+      async function saveCards() {
+        try {
+          await apiRequest("/cards-bulk", {
+            method: "PUT",
+            body: JSON.stringify({ cards: state.cards })
+          });
+        } catch {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state.cards));
+        }
+       }
+
+      async function addCard(front, back, example = "", tags = []) {
+        const card = createCard(front.trim(), back.trim(), example.trim(), tags);
+        state.cards.push(card);
+
+        // If bidirectional, also add reverse card
+        if (state.settings.bidirectionalCards) {
+          const reverseTags = ["↔", ...tags];
+          const reverseCard = createCard(back.trim(), front.trim(), example.trim(), reverseTags);
+          reverseCard.exampleEs = "";
+          state.cards.push(reverseCard);
+         }
+
+        await saveCards();
+        updateStats();
+        renderCardList();
+        updateTagFilter();
+       }
+
+      async function deleteCard(id) {
+        state.cards = state.cards.filter(c => c.id !== id);
+        await saveCards();
+        updateStats();
+        renderCardList();
+       }
+
+      // ============================================================
+      // SETTINGS
+      // ============================================================
+      async function loadSettings() {
+        try {
+          const data = await apiRequest("/settings");
+          state.settings = { ...defaultSettings, ...(data || {}) };
+          return;
+        } catch {
+          try {
+            const raw = localStorage.getItem(SETTINGS_KEY);
+            if (raw) {
+              state.settings = { ...defaultSettings, ...JSON.parse(raw) };
+              return;
+            }
+          } catch {
+            // ignore fallback errors
+          }
+        }
+
+        state.settings = { ...defaultSettings };
+       }
+
+      async function saveSettingsData(message = "Einstellungen gespeichert.") {
+        try {
+          await apiRequest("/settings", {
+            method: "PUT",
+            body: JSON.stringify(state.settings)
+          });
+        } catch {
+          localStorage.setItem(SETTINGS_KEY, JSON.stringify(state.settings));
+        }
+        showManageMessage(message, "ok");
+       }
+
+      function renderSettingsToForm() {
+        el.cardsPerSession.value = state.settings.cardsPerSession;
+        el.languageDirection.value = state.settings.languageDirection;
+        el.autoFlipEnabled.checked = state.settings.autoFlipEnabled;
+        el.autoFlipSeconds.value = state.settings.autoFlipSeconds;
+        el.timerEnabled.checked = state.settings.timerEnabled;
+        el.timerSeconds.value = state.settings.timerSeconds;
+        el.bidirectionalCards.checked = state.settings.bidirectionalCards;
+        el.soundEnabled.checked = state.settings.soundEnabled;
+        el.ttsSpanishVoice.value = state.settings.ttsSpanishVoice || "";
+        el.ttsSpanishRate.value = String(state.settings.ttsSpanishRate ?? 0.9);
+        updateTtsRateLabel();
+        updateSettingsVisibility();
+       }
+
+      function readSettingsFromForm() {
+        return {
+          cardsPerSession: Math.min(200, Math.max(1, Number(el.cardsPerSession.value) || 20)),
+          languageDirection: el.languageDirection.value,
+          autoFlipEnabled: el.autoFlipEnabled.checked,
+          autoFlipSeconds: Math.min(60, Math.max(3, Number(el.autoFlipSeconds.value) || 10)),
+          timerEnabled: el.timerEnabled.checked,
+          timerSeconds: Math.min(300, Math.max(5, Number(el.timerSeconds.value) || 30)),
+          bidirectionalCards: el.bidirectionalCards.checked,
+          soundEnabled: el.soundEnabled.checked,
+          ttsSpanishVoice: el.ttsSpanishVoice.value,
+          ttsSpanishRate: Math.min(1.4, Math.max(0.6, Number(el.ttsSpanishRate.value) || 0.9))
+         };
+       }
+
+      function updateTtsRateLabel() {
+        el.ttsSpanishRateLabel.textContent = `${Number(el.ttsSpanishRate.value || 0.9).toFixed(2)}x`;
+      }
+
+      function detectForeignLanguage(card) {
+        const tags = Array.isArray(card?.tags) ? card.tags.map(t => String(t).toLowerCase()) : [];
+        if (tags.includes("spanisch")) return "es-ES";
+        return "en-US";
+      }
+
+      function detectSpeechLanguage(side, card) {
+        const isDeToForeign = state.settings.languageDirection === "de-en";
+        const foreign = detectForeignLanguage(card);
+        if (side === "front") {
+          return isDeToForeign ? "de-DE" : foreign;
+        }
+        return isDeToForeign ? foreign : "de-DE";
+      }
+
+      function getVoicesForLang(lang) {
+        const base = lang.split("-")[0].toLowerCase();
+        const allVoices = (window.speechSynthesis?.getVoices() || []).filter(v => (v.lang || "").toLowerCase().startsWith(base));
+        allVoices.sort((a, b) => {
+          const aScore = (a.default ? 2 : 0) + (a.localService ? 1 : 0);
+          const bScore = (b.default ? 2 : 0) + (b.localService ? 1 : 0);
+          return bScore - aScore;
+        });
+        return allVoices;
+      }
+
+      function populateSpanishVoices() {
+        if (!window.speechSynthesis) return;
+        const selected = state.settings.ttsSpanishVoice || "";
+        const voices = getVoicesForLang("es-ES");
+        el.ttsSpanishVoice.innerHTML = "";
+
+        const autoOption = document.createElement("option");
+        autoOption.value = "";
+        autoOption.textContent = "Automatisch (beste spanische Stimme)";
+        el.ttsSpanishVoice.appendChild(autoOption);
+
+        voices.forEach(voice => {
+          const option = document.createElement("option");
+          option.value = voice.name;
+          option.textContent = `${voice.name} (${voice.lang})`;
+          el.ttsSpanishVoice.appendChild(option);
+        });
+
+        el.ttsSpanishVoice.value = voices.some(v => v.name === selected) ? selected : "";
+      }
+
+      function pickVoice(lang) {
+        const voices = getVoicesForLang(lang);
+        if (!voices.length) return null;
+
+        if (lang.startsWith("es") && state.settings.ttsSpanishVoice) {
+          const selected = voices.find(v => v.name === state.settings.ttsSpanishVoice);
+          if (selected) return selected;
+        }
+
+        return voices[0];
+      }
+
+      function updateSettingsVisibility() {
+        el.autoFlipSecondsWrap.classList.toggle("opacity-50", !el.autoFlipEnabled.checked);
+        el.autoFlipSeconds.disabled = !el.autoFlipEnabled.checked;
+        el.timerSecondsWrap.classList.toggle("opacity-50", !el.timerEnabled.checked);
+        el.timerSeconds.disabled = !el.timerEnabled.checked;
+       }
+
+      // ============================================================
+      // SESSION MANAGEMENT
+      // ============================================================
+      function getDueCards() {
+        return state.cards.filter(isCardDue).sort((a, b) => {
+          // Prioritize overdue cards (earlier nextReview first)
+          if (!a.nextReview && !b.nextReview) return 0;
+          if (!a.nextReview) return -1; // New cards first
+          if (!b.nextReview) return 1;
+          return new Date(a.nextReview) - new Date(b.nextReview);
+         });
+       }
+
+      function startSession() {
+        const dueCards = getDueCards();
+        if (dueCards.length === 0) {
+          el.sessionInfo.textContent = "Keine Vokabeln zum Lernen bereit. Fuege neue Vokabeln hinzu oder warte auf die nächste Wiederholung.";
+          return;
+         }
+
+        state.session.queue = dueCards.slice(0, state.settings.cardsPerSession);
+        state.session.currentIndex = 0;
+        state.session.reviewed = 0;
+        state.session.correct = 0;
+        state.session.isRunning = true;
+        state.session.flipped = false;
+
+        // Hide summary, show study UI
+        el.summaryPanel.classList.add("hidden");
+        el.startBtn.classList.add("hidden");
+        el.resetSessionBtn.classList.remove("hidden");
+
+        showNextCard();
+       }
+
+      function showNextCard() {
+        const session = state.session;
+        if (session.currentIndex >= session.queue.length) {
+          endSession();
+          return;
+         }
+
+        // Reset card view
+        session.flipped = false;
+        resetCardToFrontInstant();
+        el.ratingButtons.classList.add("hidden");
+        el.nextBtn.classList.add("hidden");
+
+        const card = session.queue[session.currentIndex];
+        session.currentCard = card;
+
+        // Determine front/back based on language direction
+        const isDeToEn = state.settings.languageDirection === "de-en";
+        // For simplicity, we always show the stored front/back (direction hint only)
+        el.cardFrontText.textContent = card.front;
+        el.cardBackText.textContent = card.back;
+        el.cardExampleFront.textContent = card.example || "";
+        el.cardExampleBack.textContent = card.exampleEs || "";
+
+        // Sound buttons
+        const showSound = state.settings.soundEnabled;
+        el.soundBackBtn.style.display = "none"; // Show after flip
+        el.soundBackExampleBtn.style.display = "none"; // Show after flip
+
+        // Update progress
+        el.sessionInfo.textContent = `Karte ${session.currentIndex + 1} von ${session.queue.length}`;
+        el.progressText.textContent = `${session.reviewed} / ${session.queue.length}`;
+        el.scoreText.textContent = `${session.correct} richtig`;
+        const pct = session.queue.length > 0 ? (session.reviewed / session.queue.length) * 100 : 0;
+        el.progressBar.style.width = pct + "%";
+
+        // Show predicted intervals
+        const cardData = { ease: card.ease || 2.5, interval: card.interval || 0, repetitions: card.repetitions || 0 };
+        const hardPred = sm2Update(cardData, 1);
+        const goodPred = sm2Update({ ...cardData }, 2);
+        const easyPred = sm2Update({ ...cardData }, 3);
+        el.hardInterval.textContent = formatInterval(hardPred.minutes);
+        el.goodInterval.textContent = formatInterval(goodPred.minutes);
+        el.easyInterval.textContent = formatInterval(easyPred.minutes);
+
+        // Timer
+        clearInterval(session.timerId);
+        clearTimeout(session.autoFlipId);
+        el.timerText.textContent = "--";
+
+        if (state.settings.timerEnabled) {
+          session.timeLeft = state.settings.timerSeconds;
+          el.timerText.textContent = session.timeLeft + "s";
+          session.timerId = setInterval(() => {
+            session.timeLeft -= 1;
+            el.timerText.textContent = session.timeLeft + "s";
+            if (session.timeLeft <= 0) {
+              clearInterval(session.timerId);
+              // Auto-flip on timeout
+              if (!session.flipped) flipCard();
+             }
+           }, 1000);
+         }
+
+        // Auto-flip
+        if (state.settings.autoFlipEnabled && !state.settings.timerEnabled) {
+          session.autoFlipId = setTimeout(() => {
+            if (!session.flipped) flipCard();
+           }, state.settings.autoFlipSeconds * 1000);
+         }
+
+        // Animate card entrance
+        el.cardScene.classList.remove("animate-slide-up");
+        void el.cardScene.offsetWidth;
+        el.cardScene.classList.add("animate-slide-up");
+       }
+
+      function resetCardToFrontInstant() {
+        el.cardInner.classList.add("no-flip-transition");
+        el.cardInner.classList.remove("flipped");
+        // Force reflow so transition:none is applied before next animation cycle.
+        void el.cardInner.offsetWidth;
+        el.cardInner.classList.remove("no-flip-transition");
+      }
+
+      function flipCard() {
+        const session = state.session;
+        if (session.flipped) return;
+        session.flipped = true;
+
+        el.cardInner.classList.add("flipped");
+        clearTimeout(session.autoFlipId);
+
+        // Show rating buttons after flip
+        setTimeout(() => {
+          el.ratingButtons.classList.remove("hidden");
+         }, 350);
+
+        // Show sound button on back
+        if (state.settings.soundEnabled) {
+          el.soundBackBtn.style.display = "inline-flex";
+          el.soundBackExampleBtn.style.display = el.cardExampleBack.textContent.trim() ? "inline-flex" : "none";
+         }
+       }
+
+      async function rateCard(quality) {
+        const session = state.session;
+        const card = session.currentCard;
+        if (!card) return;
+
+        // Clear timers
+        clearInterval(session.timerId);
+        clearTimeout(session.autoFlipId);
+
+        // Update card with SM-2
+        const result = sm2Update(card, quality);
+        card.ease = result.ease;
+        card.interval = result.interval;
+        card.repetitions = result.repetitions;
+        card.lastReview = new Date().toISOString();
+        card.nextReview = getNextReviewDate(result.minutes);
+
+        // Track correctness (Again=wrong, others=correct)
+        if (quality > 0) session.correct += 1;
+        session.reviewed += 1;
+
+        // Save cards
+        await saveCards();
+
+        // Visual feedback
+        if (quality === 0) {
+          el.cardScene.classList.add("pulse-bad");
+         } else {
+          el.cardScene.classList.add("pulse-ok");
+         }
+
+        setTimeout(() => {
+          el.cardScene.classList.remove("pulse-ok", "pulse-bad");
+          session.currentIndex += 1;
+          showNextCard();
+          updateStats();
+         }, 500);
+       }
+
+      function endSession() {
+        state.session.isRunning = false;
+        clearInterval(state.session.timerId);
+        clearTimeout(state.session.autoFlipId);
+
+        const session = state.session;
+        const total = session.queue.length;
+        const correct = session.correct;
+        const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
+
+        el.cardFrontText.textContent = "🎉";
+        el.cardBackText.textContent = "";
+        el.cardExampleFront.textContent = "";
+        el.cardExampleBack.textContent = "";
+        el.soundBackBtn.style.display = "none";
+        el.soundBackExampleBtn.style.display = "none";
+        resetCardToFrontInstant();
+        el.ratingButtons.classList.add("hidden");
+
+        el.sessionInfo.textContent = "Sitzung beendet!";
+        el.timerText.textContent = "--";
+        el.progressText.textContent = `${total} / ${total}`;
+        el.scoreText.textContent = `${correct} richtig`;
+        el.progressBar.style.width = "100%";
+
+        el.startBtn.classList.remove("hidden");
+        el.resetSessionBtn.classList.add("hidden");
+
+        // Show summary
+        el.summaryPanel.classList.remove("hidden");
+        el.summaryText.innerHTML = `Du hast <strong>${total}</strong> Vokabeln gelernt – <strong>${correct}</strong> richtig (${accuracy}% Trefferquote). ${accuracy >= 80 ? "Ausgezeichnet! 🏆" : accuracy >= 60 ? "Gut gemacht! Weiter so! 💪" : "Übung macht den Meister! 📚"}`;
+
+        updateStats();
+       }
+
+      function resetSession() {
+        clearInterval(state.session.timerId);
+        clearTimeout(state.session.autoFlipId);
+        state.session = {
+          queue: [],
+          currentIndex: 0,
+          reviewed: 0,
+          correct: 0,
+          isRunning: false,
+          flipped: false,
+          timerId: null,
+          autoFlipId: null,
+          timeLeft: 0,
+          currentCard: null
+         };
+
+        el.cardFrontText.textContent = "--";
+        el.cardBackText.textContent = "";
+        el.cardExampleFront.textContent = "";
+        el.cardExampleBack.textContent = "";
+        el.soundBackBtn.style.display = "none";
+        el.soundBackExampleBtn.style.display = "none";
+        resetCardToFrontInstant();
+        el.ratingButtons.classList.add("hidden");
+        el.nextBtn.classList.add("hidden");
+        el.summaryPanel.classList.add("hidden");
+        el.startBtn.classList.remove("hidden");
+        el.timerText.textContent = "--";
+        el.sessionInfo.textContent = "Druecke Start, um zu beginnen.";
+        el.progressText.textContent = "0 / 0";
+        el.scoreText.textContent = "0 richtig";
+        el.progressBar.style.width = "0%";
+       }
+
+      // ============================================================
+      // STATS
+      // ============================================================
+      function updateStats() {
+        const dueCount = getDueCards().length;
+        el.statDue.textContent = dueCount;
+        el.statTotal.textContent = state.cards.length;
+
+        // Count today's reviewed cards
+        const today = new Date().toDateString();
+        const reviewedToday = state.cards.filter(c => c.lastReview && new Date(c.lastReview).toDateString() === today).length;
+        el.statReviewed.textContent = reviewedToday;
+
+        // Calculate accuracy for today
+        const sessionCorrect = state.session.correct;
+        const sessionReviewed = state.session.reviewed;
+        if (sessionReviewed > 0) {
+          el.statAccuracy.textContent = Math.round((sessionCorrect / sessionReviewed) * 100) + "%";
+         } else if (reviewedToday > 0) {
+          el.statAccuracy.textContent = "--%";
+         } else {
+          el.statAccuracy.textContent = "--%";
+         }
+       }
+
+      // ============================================================
+      // CARD LIST RENDERING
+      // ============================================================
+      function renderCardList() {
+        const searchTerm = el.searchCards.value.toLowerCase();
+        const tagFilter = el.filterTag.value;
+        const statusFilter = el.filterStatus.value;
+
+        let filtered = state.cards.filter(card => {
+          // Search filter
+          if (searchTerm) {
+            const searchStr = (card.front + " " + card.back + " " + (card.example || "") + " " + (card.exampleEs || "")).toLowerCase();
+            if (!searchStr.includes(searchTerm)) return false;
+           }
+
+          // Tag filter
+          if (tagFilter && !card.tags.includes(tagFilter)) return false;
+
+          // Status filter
+          if (statusFilter === "new" && getCardStatus(card) !== "new") return false;
+          if (statusFilter === "learning" && getCardStatus(card) !== "learning") return false;
+          if (statusFilter === "graduated" && getCardStatus(card) !== "graduated") return false;
+          if (statusFilter === "due" && !isCardDue(card)) return false;
+
+          return true;
+         });
+
+        if (filtered.length === 0) {
+          el.cardList.innerHTML = `<p class="py-8 text-center text-sm font-semibold text-violet-500">Keine Vokabeln gefunden.</p>`;
+          return;
+         }
+
+        el.cardList.innerHTML = filtered.map(card => {
+          const status = getCardStatus(card);
+          const statusLabel = status === "new" ? "Neu" : status === "learning" ? "Lernend" : "Beherrscht";
+          const statusColor = status === "new" ? "bg-violet-200 text-violet-800" : status === "learning" ? "bg-orange-200 text-orange-800" : "bg-emerald-200 text-emerald-800";
+          const tagsHtml = card.tags.map(t => `<span class="tag-pill bg-purple-100 text-purple-700">${t}</span>`).join("");
+
+          return `
+            <div class="rounded-xl border border-violet-200 bg-white p-3 animate-pop">
+              <div class="flex items-start justify-between gap-3">
+                <div class="flex-1">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <span class="text-lg font-bold text-violet-900">${card.front}</span>
+                    <span class="text-sm text-violet-500">→</span>
+                    <span class="text-sm font-semibold text-emerald-700">${card.back}</span>
+                  </div>
+                  ${card.example ? `<p class="mt-1 text-xs italic text-violet-600">${card.example}</p>` : ""}
+                  <div class="mt-2 flex flex-wrap gap-1">
+                    ${tagsHtml}
+                    <span class="tag-pill ${statusColor}">${statusLabel}</span>
+                    <span class="tag-pill bg-slate-100 text-slate-600">Wdh: ${card.repetitions || 0}</span>
+                  </div>
+                </div>
+                <button
+                  onclick="deleteCard('${card.id}')"
+                  type="button"
+                  class="ml-2 rounded-lg bg-rose-100 px-2 py-1 text-xs font-semibold text-rose-700 transition hover:bg-rose-200 focus:outline-none"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>`;
+         }).join("");
+       }
+
+      function updateTagFilter() {
+        const allTags = new Set();
+        state.cards.forEach(c => c.tags.forEach(t => allTags.add(t)));
+        const current = el.filterTag.value;
+        el.filterTag.innerHTML = `<option value="">Alle Tags</option>` + [...allTags].sort().map(t => `<option value="${t}" ${t === current ? "selected" : ""}>${t}</option>`).join("");
+       }
+
+      // ============================================================
+      // IMPORT / EXPORT
+      // ============================================================
+      function exportCards() {
+        const data = JSON.stringify(state.cards, null, 2);
+        const blob = new Blob([data], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `vokabeln-export-${new Date().toISOString().slice(0, 10)}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showManageMessage(`${state.cards.length} Vokabeln exportiert.`, "ok");
+       }
+
+      function importCards() {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = ".json";
+        input.onchange = (e) => {
+          const file = e.target.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = async (ev) => {
+            try {
+              const imported = JSON.parse(ev.target.result);
+              if (!Array.isArray(imported)) throw new Error("Invalid format");
+
+              let added = 0;
+              imported.forEach(item => {
+                // Check for duplicates by front+back
+                const exists = state.cards.some(c => c.front === item.front && c.back === item.back);
+                if (!exists) {
+                  const card = createCard(item.front, item.back, item.example || "", item.tags || []);
+                  card.exampleEs = item.exampleEs || "";
+                  // Preserve learning data if present
+                  if (item.ease) card.ease = item.ease;
+                  if (item.interval) card.interval = item.interval;
+                  if (item.repetitions) card.repetitions = item.repetitions;
+                  if (item.nextReview) card.nextReview = item.nextReview;
+                  if (item.lastReview) card.lastReview = item.lastReview;
+                  state.cards.push(card);
+                  added++;
+                 }
+               });
+
+              await saveCards();
+              updateStats();
+              renderCardList();
+              updateTagFilter();
+              showManageMessage(`${added} neue Vokabeln importiert (${imported.length - added} Duplikate übersprungen).`, "ok");
+             } catch (err) {
+              showManageMessage("Fehler beim Import: Ungültiges JSON-Format.", "error");
+             }
+           };
+          reader.readAsText(file);
+         };
+        input.click();
+       }
+
+      // ============================================================
+      // TEXT-TO-SPEECH
+      // ============================================================
+      function speakText(side) {
+        if (!state.settings.soundEnabled || !state.session.currentCard) return;
+        let text = "";
+        if (side === "back") {
+          text = el.cardBackText.textContent.trim();
+        } else if (side === "backExample") {
+          text = el.cardExampleBack.textContent.trim();
+        }
+        if (!text) return;
+
+        const lang = detectSpeechLanguage(side, state.session.currentCard);
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = lang;
+        utterance.rate = lang.startsWith("es")
+          ? Math.min(1.4, Math.max(0.6, Number(state.settings.ttsSpanishRate) || 0.9))
+          : 0.9;
+        const voice = pickVoice(lang);
+        if (voice) utterance.voice = voice;
+        speechSynthesis.cancel();
+        speechSynthesis.speak(utterance);
+       }
+
+      // ============================================================
+      // UI HELPERS
+      // ============================================================
+      function showManageMessage(text, type) {
+        el.manageMessage.textContent = text;
+        if (type === "error") {
+          el.manageMessage.className = "mt-4 rounded-xl bg-rose-100 px-3 py-2 text-sm font-semibold text-rose-800";
+         } else {
+          el.manageMessage.className = "mt-4 rounded-xl bg-violet-50 px-3 py-2 text-sm font-semibold text-violet-900";
+         }
+       }
+
+      // ============================================================
+      // EVENT LISTENERS
+      // ============================================================
+      function setupEventListeners() {
+        // Settings toggle
+        el.toggleSettingsBtn.addEventListener("click", () => {
+          el.settingsPanel.classList.toggle("hidden");
+          if (!el.settingsPanel.classList.contains("hidden")) {
+            el.toggleSettingsBtn.textContent = "Einstellungen ausblenden";
+            // Close manage panel if open
+            el.managePanel.classList.add("hidden");
+           } else {
+            el.toggleSettingsBtn.textContent = "Einstellungen";
+           }
+         });
+
+        // Manage toggle
+        el.toggleManageBtn.addEventListener("click", () => {
+          el.managePanel.classList.toggle("hidden");
+          if (!el.managePanel.classList.contains("hidden")) {
+            el.toggleManageBtn.textContent = "Vokabeln ausblenden";
+            renderCardList();
+            updateTagFilter();
+            // Close settings panel if open
+            el.settingsPanel.classList.add("hidden");
+           } else {
+            el.toggleManageBtn.textContent = "Vokabeln verwalten";
+           }
+         });
+
+        // Settings form
+        el.saveSettingsBtn.addEventListener("click", async () => {
+          state.settings = readSettingsFromForm();
+          await saveSettingsData();
+          el.settingsPanel.classList.add("hidden");
+          el.toggleSettingsBtn.textContent = "Einstellungen";
+         });
+
+        el.resetSettingsBtn.addEventListener("click", async () => {
+          state.settings = { ...defaultSettings };
+          renderSettingsToForm();
+          await saveSettingsData("Einstellungen zurueckgesetzt.");
+         });
+
+        el.autoFlipEnabled.addEventListener("change", updateSettingsVisibility);
+        el.timerEnabled.addEventListener("change", updateSettingsVisibility);
+        el.ttsSpanishRate.addEventListener("input", updateTtsRateLabel);
+
+        // Add card form
+        el.addCardForm.addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const front = el.cardFront.value.trim();
+          const back = el.cardBack.value.trim();
+          const example = el.cardExample.value.trim();
+          const tagsStr = el.cardTags.value.trim();
+          const tags = tagsStr ? tagsStr.split(",").map(t => t.trim()).filter(Boolean) : [];
+
+          if (!front || !back) {
+            showManageMessage("Bitte fuelle Vorder- und Ruckseite aus.", "error");
+            return;
+           }
+
+          await addCard(front, back, example, tags);
+          el.addCardForm.reset();
+          // Restore bidirectional checkbox state after reset
+          el.bidirectionalCards.checked = state.settings.bidirectionalCards;
+          showManageMessage(`Vokabel "${front}" hinzugefügt.${state.settings.bidirectionalCards ? " (inkl. umgekehrte Karte)" : ""}`, "ok");
+         });
+
+        // Import / Export
+        el.importBtn.addEventListener("click", importCards);
+        el.exportBtn.addEventListener("click", exportCards);
+
+        // Search & filters
+        el.searchCards.addEventListener("input", renderCardList);
+        el.filterTag.addEventListener("change", renderCardList);
+        el.filterStatus.addEventListener("change", renderCardList);
+
+        // Card flip on click
+        el.cardScene.addEventListener("click", () => {
+          if (state.session.isRunning && !state.session.flipped) {
+            flipCard();
+           }
+         });
+
+        // Rating buttons
+        el.ratingButtons.addEventListener("click", (e) => {
+          const btn = e.target.closest("[data-rating]");
+          if (!btn) return;
+          const ratingMap = { again: 0, hard: 1, good: 2, easy: 3 };
+          void rateCard(ratingMap[btn.dataset.rating]);
+         });
+
+        // Session controls
+        el.startBtn.addEventListener("click", startSession);
+        el.resetSessionBtn.addEventListener("click", resetSession);
+        el.newSessionBtn.addEventListener("click", () => {
+          el.summaryPanel.classList.add("hidden");
+          startSession();
+         });
+
+        // Next button (manual advance – counts as "Again")
+        el.nextBtn.addEventListener("click", () => {
+          if (state.session.isRunning) {
+            void rateCard(0); // Treat as "Again" for manual skip
+           }
+         });
+       }
+
+      // ============================================================
+      // INITIALIZATION
+      // ============================================================
+      async function init() {
+        await loadSettings();
+        populateSpanishVoices();
+        if (window.speechSynthesis) {
+          window.speechSynthesis.onvoiceschanged = populateSpanishVoices;
+        }
+        renderSettingsToForm();
+        await loadCards();
+        updateStats();
+        setupEventListeners();
+       }
+
+      // Make deleteCard available globally for inline onclick handlers
+      window.deleteCard = deleteCard;
+      window.speakText = speakText;
+
+      // Boot
+      init().catch(() => {
+        showManageMessage("API nicht erreichbar. App nutzt lokale Speicherung.", "error");
+      });
+     </script>
+   </body>
+</html>

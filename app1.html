@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Schachbrett Quiz</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+      @keyframes boardFlash {
+        0% {
+          opacity: 0;
+        }
+        15% {
+          opacity: 0.65;
+        }
+        80% {
+          opacity: 0.6;
+        }
+        100% {
+          opacity: 0;
+        }
+      }
+
+      .flash-correct {
+        background: rgba(16, 185, 129, 0.65);
+        animation: boardFlash 1s ease-out;
+      }
+
+      .flash-wrong {
+        background: rgba(244, 63, 94, 0.7);
+        animation: boardFlash 1s ease-out;
+      }
+    </style>
+  </head>
+  <body class="min-h-screen bg-[radial-gradient(circle_at_top,_#fef3c7,_#fde68a_45%,_#f59e0b_100%)] text-stone-900">
+    <main class="mx-auto flex min-h-screen w-full max-w-5xl flex-col items-center justify-center gap-6 px-4 py-8 sm:px-8">
+      <section class="w-full rounded-3xl border border-amber-200/80 bg-white/80 p-4 shadow-2xl shadow-amber-900/10 backdrop-blur sm:p-6">
+        <div class="mb-4 text-center">
+          <div>
+            <p id="targetSquare" class="text-5xl font-black text-amber-700 sm:text-7xl">a1</p>
+          </div>
+        </div>
+
+        <p id="feedback" class="mb-4 rounded-xl bg-stone-100 px-4 py-2 text-center text-sm font-semibold text-stone-700">
+          Wähle das gesuchte Feld auf dem Brett.
+        </p>
+
+        <div class="mb-4 flex justify-center">
+          <a
+            href="app2.html"
+            class="rounded-2xl bg-amber-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-amber-700 focus:outline-none focus:ring-4 focus:ring-amber-300/70"
+          >
+            Zur Rechen-App wechseln
+          </a>
+        </div>
+
+        <div class="mx-auto w-full max-w-[560px]">
+          <div id="boardShell" class="relative aspect-square w-full overflow-hidden rounded-2xl border-4 border-stone-800">
+            <div id="board" class="grid h-full w-full grid-cols-8"></div>
+            <div id="flashOverlay" class="pointer-events-none absolute inset-0 opacity-0"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const files = ["a", "b", "c", "d", "e", "f", "g", "h"];
+      const ranks = [8, 7, 6, 5, 4, 3, 2, 1];
+
+      const board = document.getElementById("board");
+      const flashOverlay = document.getElementById("flashOverlay");
+      const targetSquareText = document.getElementById("targetSquare");
+      const feedback = document.getElementById("feedback");
+
+      let targetSquare = "a1";
+
+      function randomSquare() {
+        const file = files[Math.floor(Math.random() * files.length)];
+        const rank = ranks[Math.floor(Math.random() * ranks.length)];
+        return `${file}${rank}`;
+      }
+
+      function pickNewTarget() {
+        targetSquare = randomSquare();
+        targetSquareText.textContent = targetSquare;
+        feedback.textContent = "Wähle das gesuchte Feld auf dem Brett.";
+        feedback.className = "mb-4 rounded-xl bg-stone-100 px-4 py-2 text-center text-sm font-semibold text-stone-700";
+      }
+
+      function flashBoard(isCorrect) {
+        flashOverlay.classList.remove("flash-correct", "flash-wrong");
+        void flashOverlay.offsetWidth;
+        flashOverlay.classList.add(isCorrect ? "flash-correct" : "flash-wrong");
+      }
+
+      function handleSquareClick(square) {
+        if (square === targetSquare) {
+          flashBoard(true);
+          feedback.textContent = `Richtig! ${square} war korrekt.`;
+          feedback.className = "mb-4 rounded-xl bg-emerald-100 px-4 py-2 text-center text-sm font-semibold text-emerald-800";
+          pickNewTarget();
+          return;
+        }
+
+        flashBoard(false);
+        feedback.textContent = `Leider falsch: ${square}. Gesucht war ${targetSquare}.`;
+        feedback.className = "mb-4 rounded-xl bg-rose-100 px-4 py-2 text-center text-sm font-semibold text-rose-800";
+      }
+
+      function renderBoard() {
+        let isLight = false;
+
+        for (const rank of ranks) {
+          for (const file of files) {
+            const square = `${file}${rank}`;
+            const tile = document.createElement("button");
+            tile.type = "button";
+            tile.dataset.square = square;
+            tile.className = [
+              "relative",
+              "aspect-square",
+              "w-full",
+              "transition",
+              "duration-150",
+              "hover:brightness-110",
+              "focus:outline-none",
+              "focus:ring-4",
+              "focus:ring-amber-400/70",
+              isLight ? "bg-amber-200" : "bg-stone-700"
+            ].join(" ");
+
+            tile.addEventListener("click", () => handleSquareClick(square));
+            board.appendChild(tile);
+            isLight = !isLight;
+          }
+
+          isLight = !isLight;
+        }
+      }
+
+      renderBoard();
+      pickNewTarget();
+    </script>
+  </body>
+</html>

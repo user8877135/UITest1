@@ -1,0 +1,802 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rechen Trainer</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --bg-a: #ecfeff;
+        --bg-b: #cffafe;
+        --bg-c: #67e8f9;
+        --ink: #062c30;
+      }
+
+      body {
+        font-family: "Space Grotesk", sans-serif;
+      }
+
+      @keyframes popIn {
+        0% {
+          opacity: 0;
+          transform: translateY(8px) scale(0.98);
+        }
+
+        100% {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      @keyframes pulseOk {
+        0% {
+          box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.45);
+        }
+
+        100% {
+          box-shadow: 0 0 0 24px rgba(16, 185, 129, 0);
+        }
+      }
+
+      @keyframes pulseBad {
+        0% {
+          box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.45);
+        }
+
+        100% {
+          box-shadow: 0 0 0 24px rgba(244, 63, 94, 0);
+        }
+      }
+
+      .animate-pop {
+        animation: popIn 280ms ease-out;
+      }
+
+      .pulse-ok {
+        animation: pulseOk 500ms ease-out;
+      }
+
+      .pulse-bad {
+        animation: pulseBad 500ms ease-out;
+      }
+    </style>
+  </head>
+  <body
+    class="min-h-screen bg-[radial-gradient(circle_at_top,_var(--bg-a),_var(--bg-b)_48%,_var(--bg-c)_100%)] px-4 py-8 text-[color:var(--ink)] sm:px-8"
+  >
+    <main class="mx-auto w-full max-w-5xl space-y-5">
+      <header class="animate-pop rounded-3xl border border-cyan-200/80 bg-white/80 p-5 shadow-xl shadow-cyan-900/10 backdrop-blur">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p class="text-xs font-bold uppercase tracking-[0.22em] text-cyan-700">Mathe Training</p>
+            <h1 class="text-3xl font-bold sm:text-4xl">Grundrechenarten ueben</h1>
+            <p class="mt-1 text-sm text-cyan-900/80">Waehle Einstellungen, starte eine Runde und verbessere deine Trefferquote.</p>
+          </div>
+          <button
+            id="toggleSettingsBtn"
+            type="button"
+            class="rounded-2xl border border-cyan-300 bg-cyan-50 px-4 py-2 text-sm font-semibold text-cyan-900 transition hover:bg-cyan-100 focus:outline-none focus:ring-4 focus:ring-cyan-300/70"
+          >
+            Einstellungen einblenden
+          </button>
+        </div>
+      </header>
+
+      <section
+        id="settingsPanel"
+        class="hidden animate-pop rounded-3xl border border-cyan-200/80 bg-white/90 p-5 shadow-lg shadow-cyan-900/10 backdrop-blur"
+      >
+        <h2 class="mb-4 text-xl font-bold">Einstellungen</h2>
+
+        <form id="settingsForm" class="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <label class="flex flex-col gap-2 text-sm font-medium">
+            Rechenart
+            <select
+              id="operation"
+              class="rounded-xl border border-cyan-200 bg-white px-3 py-2 font-semibold focus:outline-none focus:ring-4 focus:ring-cyan-300/70"
+            >
+              <option value="addition">Addition (+)</option>
+              <option value="subtraction">Subtraktion (-)</option>
+              <option value="multiplication">Multiplikation (x)</option>
+              <option value="division">Division (/)</option>
+              <option value="mixed">Gemischt</option>
+            </select>
+          </label>
+
+          <label class="flex flex-col gap-2 text-sm font-medium">
+            Anzahl Aufgaben
+            <input
+              id="questionCount"
+              type="number"
+              min="1"
+              max="100"
+              class="rounded-xl border border-cyan-200 bg-white px-3 py-2 font-semibold focus:outline-none focus:ring-4 focus:ring-cyan-300/70"
+            />
+          </label>
+
+          <label class="flex flex-col gap-2 text-sm font-medium">
+            Zahl 1: Minimum
+            <input
+              id="minA"
+              type="number"
+              class="rounded-xl border border-cyan-200 bg-white px-3 py-2 font-semibold focus:outline-none focus:ring-4 focus:ring-cyan-300/70"
+            />
+          </label>
+
+          <label class="flex flex-col gap-2 text-sm font-medium">
+            Zahl 1: Maximum
+            <input
+              id="maxA"
+              type="number"
+              class="rounded-xl border border-cyan-200 bg-white px-3 py-2 font-semibold focus:outline-none focus:ring-4 focus:ring-cyan-300/70"
+            />
+          </label>
+
+          <label class="flex flex-col gap-2 text-sm font-medium">
+            Zahl 2: Minimum
+            <input
+              id="minB"
+              type="number"
+              class="rounded-xl border border-cyan-200 bg-white px-3 py-2 font-semibold focus:outline-none focus:ring-4 focus:ring-cyan-300/70"
+            />
+          </label>
+
+          <label class="flex flex-col gap-2 text-sm font-medium">
+            Zahl 2: Maximum
+            <input
+              id="maxB"
+              type="number"
+              class="rounded-xl border border-cyan-200 bg-white px-3 py-2 font-semibold focus:outline-none focus:ring-4 focus:ring-cyan-300/70"
+            />
+          </label>
+
+          <label class="flex items-center gap-3 rounded-xl bg-cyan-50 px-3 py-2 text-sm font-medium">
+            <input id="allowNegatives" type="checkbox" class="h-4 w-4 accent-cyan-600" />
+            Negative Zahlen erlauben
+          </label>
+
+          <label class="flex items-center gap-3 rounded-xl bg-cyan-50 px-3 py-2 text-sm font-medium">
+            <input id="immediateFeedback" type="checkbox" class="h-4 w-4 accent-cyan-600" />
+            Sofort Feedback anzeigen
+          </label>
+
+          <label class="flex items-center gap-3 rounded-xl bg-cyan-50 px-3 py-2 text-sm font-medium">
+            <input id="timerEnabled" type="checkbox" class="h-4 w-4 accent-cyan-600" />
+            Zeitlimit je Aufgabe
+          </label>
+
+          <label class="flex flex-col gap-2 text-sm font-medium" id="timerSecondsWrap">
+            Zeitlimit (Sekunden)
+            <input
+              id="timerSeconds"
+              type="number"
+              min="5"
+              max="300"
+              class="rounded-xl border border-cyan-200 bg-white px-3 py-2 font-semibold focus:outline-none focus:ring-4 focus:ring-cyan-300/70"
+            />
+          </label>
+
+          <div class="md:col-span-2 flex flex-wrap gap-3 pt-1">
+            <button
+              id="saveSettingsBtn"
+              type="button"
+              class="rounded-2xl bg-cyan-700 px-5 py-2 text-sm font-semibold text-white transition hover:bg-cyan-800 focus:outline-none focus:ring-4 focus:ring-cyan-300/70"
+            >
+              Einstellungen speichern
+            </button>
+            <button
+              id="resetSettingsBtn"
+              type="button"
+              class="rounded-2xl border border-cyan-300 bg-white px-5 py-2 text-sm font-semibold text-cyan-900 transition hover:bg-cyan-50 focus:outline-none focus:ring-4 focus:ring-cyan-300/70"
+            >
+              Zuruecksetzen
+            </button>
+          </div>
+        </form>
+
+        <p id="settingsMessage" class="mt-4 rounded-xl bg-cyan-50 px-3 py-2 text-sm font-semibold text-cyan-900" role="status" aria-live="polite">
+          Passe die Runde an und starte dann das Training.
+        </p>
+      </section>
+
+      <section class="animate-pop rounded-3xl border border-cyan-200/80 bg-white/90 p-5 shadow-lg shadow-cyan-900/10 backdrop-blur">
+        <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p class="text-xs font-bold uppercase tracking-[0.2em] text-cyan-700">Aktuelle Aufgabe</p>
+            <p id="questionText" class="mt-1 text-4xl font-black sm:text-5xl">Druecke Start</p>
+          </div>
+          <div class="rounded-2xl bg-cyan-50 px-4 py-2 text-right">
+            <p class="text-xs font-semibold text-cyan-700">Zeit</p>
+            <p id="timerText" class="text-2xl font-bold text-cyan-900">--</p>
+          </div>
+        </div>
+
+        <form id="answerForm" class="flex flex-col gap-3 sm:flex-row sm:items-end">
+          <label class="flex-1 text-sm font-medium">
+            Deine Antwort
+            <input
+              id="answerInput"
+              type="number"
+              step="1"
+              inputmode="numeric"
+              class="mt-2 w-full rounded-2xl border border-cyan-200 bg-white px-4 py-3 text-2xl font-bold focus:outline-none focus:ring-4 focus:ring-cyan-300/70"
+              autocomplete="off"
+              disabled
+            />
+          </label>
+          <button
+            id="submitBtn"
+            type="submit"
+            class="rounded-2xl bg-cyan-700 px-6 py-3 text-sm font-semibold text-white transition hover:bg-cyan-800 focus:outline-none focus:ring-4 focus:ring-cyan-300/70 disabled:cursor-not-allowed disabled:bg-cyan-300"
+            disabled
+          >
+            Pruefen
+          </button>
+          <button
+            id="nextBtn"
+            type="button"
+            class="hidden rounded-2xl border border-cyan-300 bg-white px-6 py-3 text-sm font-semibold text-cyan-900 transition hover:bg-cyan-50 focus:outline-none focus:ring-4 focus:ring-cyan-300/70"
+          >
+            Naechste Aufgabe
+          </button>
+        </form>
+
+        <p id="feedback" class="mt-4 rounded-xl bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-700" role="status" aria-live="polite">
+          Starte eine Runde, um mit dem Ueben zu beginnen.
+        </p>
+
+        <div class="mt-4">
+          <div class="mb-2 flex items-center justify-between text-sm font-semibold text-cyan-900">
+            <span id="progressText">0 / 0</span>
+            <span id="scoreText">0 richtig</span>
+          </div>
+          <div class="h-3 overflow-hidden rounded-full bg-cyan-100">
+            <div id="progressBar" class="h-full w-0 rounded-full bg-cyan-600 transition-all duration-300"></div>
+          </div>
+        </div>
+
+        <div class="mt-5 flex flex-wrap gap-3">
+          <button
+            id="startBtn"
+            type="button"
+            class="rounded-2xl bg-emerald-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-300/70"
+          >
+            Start
+          </button>
+          <button
+            id="resetRoundBtn"
+            type="button"
+            class="rounded-2xl border border-cyan-300 bg-white px-5 py-2 text-sm font-semibold text-cyan-900 transition hover:bg-cyan-50 focus:outline-none focus:ring-4 focus:ring-cyan-300/70"
+          >
+            Runde reset
+          </button>
+        </div>
+      </section>
+
+      <section id="summaryPanel" class="hidden animate-pop rounded-3xl border border-emerald-200/80 bg-emerald-50/80 p-5 shadow-lg shadow-emerald-900/10">
+        <h2 class="text-2xl font-bold text-emerald-900">Runde abgeschlossen</h2>
+        <p id="summaryText" class="mt-2 text-sm font-semibold text-emerald-900"></p>
+      </section>
+    </main>
+
+    <script>
+      const STORAGE_KEY = "mathTrainerSettingsV1";
+
+      const defaults = {
+        operation: "mixed",
+        questionCount: 10,
+        minA: 1,
+        maxA: 20,
+        minB: 1,
+        maxB: 20,
+        allowNegatives: false,
+        immediateFeedback: true,
+        timerEnabled: false,
+        timerSeconds: 20
+      };
+
+      const state = {
+        settings: { ...defaults },
+        questions: [],
+        currentIndex: 0,
+        score: 0,
+        answers: [],
+        isRunning: false,
+        revealMode: false,
+        timerId: null,
+        timeLeft: 0
+      };
+
+      const el = {
+        toggleSettingsBtn: document.getElementById("toggleSettingsBtn"),
+        settingsPanel: document.getElementById("settingsPanel"),
+        settingsForm: document.getElementById("settingsForm"),
+        settingsMessage: document.getElementById("settingsMessage"),
+        operation: document.getElementById("operation"),
+        questionCount: document.getElementById("questionCount"),
+        minA: document.getElementById("minA"),
+        maxA: document.getElementById("maxA"),
+        minB: document.getElementById("minB"),
+        maxB: document.getElementById("maxB"),
+        allowNegatives: document.getElementById("allowNegatives"),
+        immediateFeedback: document.getElementById("immediateFeedback"),
+        timerEnabled: document.getElementById("timerEnabled"),
+        timerSecondsWrap: document.getElementById("timerSecondsWrap"),
+        timerSeconds: document.getElementById("timerSeconds"),
+        saveSettingsBtn: document.getElementById("saveSettingsBtn"),
+        resetSettingsBtn: document.getElementById("resetSettingsBtn"),
+        questionText: document.getElementById("questionText"),
+        timerText: document.getElementById("timerText"),
+        answerForm: document.getElementById("answerForm"),
+        answerInput: document.getElementById("answerInput"),
+        submitBtn: document.getElementById("submitBtn"),
+        nextBtn: document.getElementById("nextBtn"),
+        feedback: document.getElementById("feedback"),
+        progressText: document.getElementById("progressText"),
+        scoreText: document.getElementById("scoreText"),
+        progressBar: document.getElementById("progressBar"),
+        startBtn: document.getElementById("startBtn"),
+        resetRoundBtn: document.getElementById("resetRoundBtn"),
+        summaryPanel: document.getElementById("summaryPanel"),
+        summaryText: document.getElementById("summaryText")
+      };
+
+      function clamp(value, min, max) {
+        return Math.min(max, Math.max(min, value));
+      }
+
+      function randomInt(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+      }
+
+      function loadSettings() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return;
+          const parsed = JSON.parse(raw);
+          state.settings = sanitizeSettings({ ...defaults, ...parsed });
+        } catch {
+          state.settings = { ...defaults };
+        }
+      }
+
+      function saveSettings(message = "Einstellungen gespeichert.") {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state.settings));
+        showSettingsMessage(message, "ok");
+        setFeedback(message, "ok");
+        closeSettingsPanel();
+      }
+
+      function sanitizeSettings(candidate) {
+        const sanitized = { ...defaults, ...candidate };
+        const allowedOps = ["addition", "subtraction", "multiplication", "division", "mixed"];
+        if (!allowedOps.includes(sanitized.operation)) sanitized.operation = defaults.operation;
+
+        sanitized.questionCount = clamp(Number(sanitized.questionCount) || defaults.questionCount, 1, 100);
+        sanitized.minA = clamp(Number(sanitized.minA) || defaults.minA, -999, 999);
+        sanitized.maxA = clamp(Number(sanitized.maxA) || defaults.maxA, -999, 999);
+        sanitized.minB = clamp(Number(sanitized.minB) || defaults.minB, -999, 999);
+        sanitized.maxB = clamp(Number(sanitized.maxB) || defaults.maxB, -999, 999);
+
+        if (sanitized.minA > sanitized.maxA) [sanitized.minA, sanitized.maxA] = [sanitized.maxA, sanitized.minA];
+        if (sanitized.minB > sanitized.maxB) [sanitized.minB, sanitized.maxB] = [sanitized.maxB, sanitized.minB];
+
+        sanitized.allowNegatives = Boolean(sanitized.allowNegatives);
+        sanitized.immediateFeedback = Boolean(sanitized.immediateFeedback);
+        sanitized.timerEnabled = Boolean(sanitized.timerEnabled);
+        sanitized.timerSeconds = clamp(Number(sanitized.timerSeconds) || defaults.timerSeconds, 5, 300);
+
+        return sanitized;
+      }
+
+      function readSettingsFromForm() {
+        return sanitizeSettings({
+          operation: el.operation.value,
+          questionCount: Number(el.questionCount.value),
+          minA: Number(el.minA.value),
+          maxA: Number(el.maxA.value),
+          minB: Number(el.minB.value),
+          maxB: Number(el.maxB.value),
+          allowNegatives: el.allowNegatives.checked,
+          immediateFeedback: el.immediateFeedback.checked,
+          timerEnabled: el.timerEnabled.checked,
+          timerSeconds: Number(el.timerSeconds.value)
+        });
+      }
+
+      function renderSettingsToForm() {
+        el.operation.value = state.settings.operation;
+        el.questionCount.value = state.settings.questionCount;
+        el.minA.value = state.settings.minA;
+        el.maxA.value = state.settings.maxA;
+        el.minB.value = state.settings.minB;
+        el.maxB.value = state.settings.maxB;
+        el.allowNegatives.checked = state.settings.allowNegatives;
+        el.immediateFeedback.checked = state.settings.immediateFeedback;
+        el.timerEnabled.checked = state.settings.timerEnabled;
+        el.timerSeconds.value = state.settings.timerSeconds;
+        updateTimerVisibility();
+      }
+
+      function updateTimerVisibility() {
+        const isEnabled = el.timerEnabled.checked;
+        el.timerSecondsWrap.classList.toggle("opacity-50", !isEnabled);
+        el.timerSeconds.disabled = !isEnabled;
+      }
+
+      function showSettingsMessage(text, type) {
+        el.settingsMessage.textContent = text;
+        if (type === "error") {
+          el.settingsMessage.className = "mt-4 rounded-xl bg-rose-100 px-3 py-2 text-sm font-semibold text-rose-800";
+          return;
+        }
+
+        el.settingsMessage.className = "mt-4 rounded-xl bg-cyan-50 px-3 py-2 text-sm font-semibold text-cyan-900";
+      }
+
+      function closeSettingsPanel() {
+        el.settingsPanel.classList.add("hidden");
+        el.toggleSettingsBtn.textContent = "Einstellungen einblenden";
+      }
+
+      function opToSign(op) {
+        if (op === "addition") return "+";
+        if (op === "subtraction") return "-";
+        if (op === "multiplication") return "x";
+        return "/";
+      }
+
+      function availableOperations(baseOperation) {
+        if (baseOperation === "mixed") {
+          return ["addition", "subtraction", "multiplication", "division"];
+        }
+
+        return [baseOperation];
+      }
+
+      function randomInRange(min, max, allowNegatives) {
+        if (allowNegatives) return randomInt(min, max);
+        const adjustedMin = Math.max(0, min);
+        const adjustedMax = Math.max(adjustedMin, max);
+        return randomInt(adjustedMin, adjustedMax);
+      }
+
+      function createQuestion(settings) {
+        const ops = availableOperations(settings.operation);
+        const op = ops[randomInt(0, ops.length - 1)];
+
+        if (op === "division") {
+          for (let i = 0; i < 120; i += 1) {
+            let b = randomInRange(settings.minB, settings.maxB, settings.allowNegatives);
+            if (b === 0) continue;
+
+            let result = randomInRange(settings.minA, settings.maxA, settings.allowNegatives);
+            if (!settings.allowNegatives) result = Math.abs(result);
+
+            const a = result * b;
+            if (a < settings.minA || a > settings.maxA) continue;
+
+            return {
+              op,
+              left: a,
+              right: b,
+              answer: result,
+              text: `${a} / ${b}`
+            };
+          }
+
+          return {
+            op,
+            left: 0,
+            right: 1,
+            answer: 0,
+            text: "0 / 1"
+          };
+        }
+
+        let a = randomInRange(settings.minA, settings.maxA, settings.allowNegatives);
+        let b = randomInRange(settings.minB, settings.maxB, settings.allowNegatives);
+
+        if (op === "subtraction" && !settings.allowNegatives && a < b) {
+          [a, b] = [b, a];
+        }
+
+        const answer =
+          op === "addition"
+            ? a + b
+            : op === "subtraction"
+              ? a - b
+              : a * b;
+
+        return {
+          op,
+          left: a,
+          right: b,
+          answer,
+          text: `${a} ${opToSign(op)} ${b}`
+        };
+      }
+
+      function buildQuestionSet(settings) {
+        const questions = [];
+        for (let i = 0; i < settings.questionCount; i += 1) {
+          questions.push(createQuestion(settings));
+        }
+
+        return questions;
+      }
+
+      function resetRoundState() {
+        stopTimer();
+        state.questions = [];
+        state.currentIndex = 0;
+        state.score = 0;
+        state.answers = [];
+        state.isRunning = false;
+        state.revealMode = false;
+        state.timeLeft = 0;
+        renderQuestionPlaceholder();
+        renderProgress();
+        el.summaryPanel.classList.add("hidden");
+      }
+
+      function renderQuestionPlaceholder() {
+        el.questionText.textContent = "Druecke Start";
+        el.answerInput.value = "";
+        el.answerInput.disabled = true;
+        el.submitBtn.disabled = true;
+        el.nextBtn.classList.add("hidden");
+        el.timerText.textContent = "--";
+        setFeedback("Starte eine Runde, um mit dem Ueben zu beginnen.", "neutral");
+      }
+
+      function setFeedback(text, type) {
+        el.feedback.textContent = text;
+        if (type === "ok") {
+          el.feedback.className = "mt-4 rounded-xl bg-emerald-100 px-4 py-3 text-sm font-semibold text-emerald-800";
+          el.feedback.classList.remove("pulse-bad");
+          void el.feedback.offsetWidth;
+          el.feedback.classList.add("pulse-ok");
+          return;
+        }
+
+        if (type === "bad") {
+          el.feedback.className = "mt-4 rounded-xl bg-rose-100 px-4 py-3 text-sm font-semibold text-rose-800";
+          el.feedback.classList.remove("pulse-ok");
+          void el.feedback.offsetWidth;
+          el.feedback.classList.add("pulse-bad");
+          return;
+        }
+
+        el.feedback.className = "mt-4 rounded-xl bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-700";
+        el.feedback.classList.remove("pulse-ok", "pulse-bad");
+      }
+
+      function renderProgress() {
+        const done = state.answers.length;
+        const total = state.settings.questionCount;
+        el.progressText.textContent = `${done} / ${total}`;
+        el.scoreText.textContent = `${state.score} richtig`;
+        const ratio = total === 0 ? 0 : Math.round((done / total) * 100);
+        el.progressBar.style.width = `${ratio}%`;
+      }
+
+      function currentQuestion() {
+        return state.questions[state.currentIndex] || null;
+      }
+
+      function renderCurrentQuestion() {
+        const question = currentQuestion();
+        if (!question) return;
+
+        el.questionText.textContent = question.text;
+        el.answerInput.disabled = false;
+        el.submitBtn.disabled = false;
+        el.nextBtn.classList.add("hidden");
+        el.answerInput.value = "";
+        el.answerInput.focus();
+
+        if (state.settings.timerEnabled) {
+          startTimer(state.settings.timerSeconds);
+        } else {
+          el.timerText.textContent = "--";
+        }
+      }
+
+      function startRound() {
+        state.settings = readSettingsFromForm();
+        saveSettings("Einstellungen gespeichert und Runde gestartet.");
+
+        state.questions = buildQuestionSet(state.settings);
+        state.currentIndex = 0;
+        state.score = 0;
+        state.answers = [];
+        state.isRunning = true;
+        state.revealMode = false;
+        el.summaryPanel.classList.add("hidden");
+
+        renderProgress();
+        renderCurrentQuestion();
+        setFeedback("Los geht's! Gib deine Antwort ein.", "neutral");
+      }
+
+      function endRound() {
+        stopTimer();
+        state.isRunning = false;
+        state.revealMode = false;
+        el.answerInput.disabled = true;
+        el.submitBtn.disabled = true;
+        el.nextBtn.classList.add("hidden");
+
+        const total = state.settings.questionCount;
+        const percent = total ? Math.round((state.score / total) * 100) : 0;
+        const avgTime =
+          state.answers.length > 0
+            ? Math.round(state.answers.reduce((sum, item) => sum + item.durationSeconds, 0) / state.answers.length)
+            : 0;
+
+        el.summaryText.textContent = `Du hast ${state.score} von ${total} Aufgaben richtig geloest (${percent}%). Durchschnittliche Antwortzeit: ${avgTime}s.`;
+        el.summaryPanel.classList.remove("hidden");
+        setFeedback("Runde beendet. Passe Einstellungen an oder starte erneut.", "neutral");
+        el.questionText.textContent = "Runde abgeschlossen";
+        el.timerText.textContent = "--";
+      }
+
+      function advanceQuestion() {
+        state.currentIndex += 1;
+        if (state.currentIndex >= state.questions.length) {
+          endRound();
+          renderProgress();
+          return;
+        }
+
+        state.revealMode = false;
+        renderCurrentQuestion();
+      }
+
+      function evaluateAnswer(userValue, reason = "manual") {
+        const question = currentQuestion();
+        if (!question || !state.isRunning) return;
+
+        stopTimer();
+
+        const parsed = Number(userValue);
+        const hasNumber = Number.isFinite(parsed);
+        const isCorrect = hasNumber && parsed === question.answer;
+
+        if (isCorrect) state.score += 1;
+
+        const duration = state.settings.timerEnabled ? state.settings.timerSeconds - state.timeLeft : 0;
+        state.answers.push({
+          question: question.text,
+          correctAnswer: question.answer,
+          userAnswer: hasNumber ? parsed : null,
+          isCorrect,
+          durationSeconds: Math.max(0, duration),
+          reason
+        });
+
+        renderProgress();
+
+        if (isCorrect) {
+          setFeedback(`Richtig: ${question.text} = ${question.answer}`, "ok");
+        } else if (!hasNumber) {
+          setFeedback(`Keine gueltige Zahl. Korrekt waere ${question.answer}.`, "bad");
+        } else {
+          setFeedback(`Falsch: ${question.text} = ${question.answer} (dein Wert: ${parsed})`, "bad");
+        }
+
+        if (state.settings.immediateFeedback) {
+          advanceQuestion();
+          return;
+        }
+
+        state.revealMode = true;
+        el.answerInput.disabled = true;
+        el.submitBtn.disabled = true;
+        el.nextBtn.classList.remove("hidden");
+      }
+
+      function startTimer(seconds) {
+        stopTimer();
+        state.timeLeft = seconds;
+        el.timerText.textContent = `${state.timeLeft}s`;
+
+        state.timerId = window.setInterval(() => {
+          state.timeLeft -= 1;
+          el.timerText.textContent = `${Math.max(0, state.timeLeft)}s`;
+          if (state.timeLeft <= 0) {
+            stopTimer();
+            evaluateAnswer(Number.NaN, "timeout");
+          }
+        }, 1000);
+      }
+
+      function stopTimer() {
+        if (state.timerId !== null) {
+          clearInterval(state.timerId);
+          state.timerId = null;
+        }
+      }
+
+      function validateSettingsForMessage(settings) {
+        if (!settings.allowNegatives) {
+          if (settings.maxA < 0 || settings.maxB < 0) {
+            return "Bei deaktivierten negativen Zahlen sollte das Maximum nicht negativ sein.";
+          }
+        }
+
+        if (settings.operation === "division" || settings.operation === "mixed") {
+          if (settings.minB === 0 && settings.maxB === 0) {
+            return "Fuer Division darf Zahl 2 nicht nur 0 enthalten.";
+          }
+        }
+
+        return "";
+      }
+
+      function toggleSettingsPanel() {
+        const isHidden = el.settingsPanel.classList.contains("hidden");
+        el.settingsPanel.classList.toggle("hidden", !isHidden);
+        el.toggleSettingsBtn.textContent = isHidden ? "Einstellungen ausblenden" : "Einstellungen einblenden";
+      }
+
+      el.toggleSettingsBtn.addEventListener("click", toggleSettingsPanel);
+
+      el.timerEnabled.addEventListener("change", updateTimerVisibility);
+
+      el.saveSettingsBtn.addEventListener("click", () => {
+        const next = readSettingsFromForm();
+        const warning = validateSettingsForMessage(next);
+        state.settings = next;
+        saveSettings(warning || "Einstellungen gespeichert.");
+      });
+
+      el.resetSettingsBtn.addEventListener("click", () => {
+        state.settings = { ...defaults };
+        renderSettingsToForm();
+        saveSettings("Auf Standardwerte zurueckgesetzt.");
+      });
+
+      el.startBtn.addEventListener("click", () => {
+        const candidate = readSettingsFromForm();
+        const warning = validateSettingsForMessage(candidate);
+        if (warning) {
+          showSettingsMessage(warning, "error");
+          return;
+        }
+
+        startRound();
+      });
+
+      el.resetRoundBtn.addEventListener("click", () => {
+        resetRoundState();
+        setFeedback("Runde wurde zurueckgesetzt.", "neutral");
+      });
+
+      el.answerForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        if (!state.isRunning || state.revealMode) return;
+        evaluateAnswer(el.answerInput.value, "manual");
+      });
+
+      el.nextBtn.addEventListener("click", () => {
+        if (!state.isRunning) return;
+        advanceQuestion();
+      });
+
+      function init() {
+        loadSettings();
+        renderSettingsToForm();
+        renderProgress();
+        updateTimerVisibility();
+      }
+
+      init();
+    </script>
+  </body>
+</html>

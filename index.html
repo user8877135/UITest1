@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Web Apps Startseite</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700;800&display=swap" rel="stylesheet" />
+    <style>
+      body {
+        font-family: "Space Grotesk", sans-serif;
+      }
+
+      @keyframes floatIn {
+        from {
+          opacity: 0;
+          transform: translateY(14px);
+        }
+
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .float-in {
+        animation: floatIn 420ms ease-out both;
+      }
+    </style>
+  </head>
+  <body class="min-h-screen bg-[radial-gradient(circle_at_top,_#fefce8,_#fde68a_42%,_#fb923c_100%)] text-stone-900">
+    <main class="mx-auto flex min-h-screen w-full max-w-6xl flex-col justify-center gap-8 px-4 py-10 sm:px-8">
+      <section class="float-in rounded-3xl border border-amber-200/70 bg-white/85 p-6 shadow-2xl shadow-amber-950/10 backdrop-blur sm:p-8">
+        <div class="max-w-3xl">
+          <p class="text-xs font-bold uppercase tracking-[0.28em] text-amber-700">Startseite</p>
+           <h1 class="mt-2 text-4xl font-black tracking-tight sm:text-6xl">Drei Web-Apps, ein Einstieg</h1>
+           <p class="mt-4 text-base leading-7 text-stone-700 sm:text-lg">
+            Waehle hier direkt zwischen dem Schachbrett-Quiz, der Rechen-App und dem Vokabel-Trainer zum Sprachen lernen.
+          </p>
+        </div>
+
+        <div class="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <a
+            href="app1.html"
+            class="group rounded-3xl border border-stone-200 bg-gradient-to-br from-stone-900 to-stone-700 p-6 text-white shadow-lg transition hover:-translate-y-1 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-amber-300/70"
+          >
+            <p class="text-xs font-bold uppercase tracking-[0.22em] text-amber-300">App 1</p>
+            <h2 class="mt-2 text-2xl font-bold">Schachbrett Quiz</h2>
+            <p class="mt-3 max-w-md text-sm leading-6 text-stone-200">
+              Finde das gesuchte Feld auf dem Brett und trainiere deine Schachbrett-Koordination.
+            </p>
+            <span class="mt-6 inline-flex items-center gap-2 rounded-2xl bg-white/10 px-4 py-2 text-sm font-semibold transition group-hover:bg-white/15">
+              App starten
+              <span aria-hidden="true">→</span>
+            </span>
+          </a>
+
+          <a
+            href="app2.html"
+            class="group rounded-3xl border border-cyan-200 bg-gradient-to-br from-cyan-700 to-cyan-500 p-6 text-white shadow-lg transition hover:-translate-y-1 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-cyan-300/70"
+          >
+            <p class="text-xs font-bold uppercase tracking-[0.22em] text-cyan-100">App 2</p>
+            <h2 class="mt-2 text-2xl font-bold">Rechen Trainer</h2>
+            <p class="mt-3 max-w-md text-sm leading-6 text-cyan-50">
+              Uebe Addition, Subtraktion, Multiplikation, Division und gemischte Aufgaben mit Einstellungen.
+            </p>
+            <span class="mt-6 inline-flex items-center gap-2 rounded-2xl bg-white/10 px-4 py-2 text-sm font-semibold transition group-hover:bg-white/15">
+              App starten
+              <span aria-hidden="true">→</span>
+            </span>
+          </a>
+
+          <a
+            href="app3.html"
+            class="group rounded-3xl border border-violet-200 bg-gradient-to-br from-violet-700 to-purple-500 p-6 text-white shadow-lg transition hover:-translate-y-1 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-violet-300/70"
+          >
+            <p class="text-xs font-bold uppercase tracking-[0.22em] text-violet-200">App 3</p>
+            <h2 class="mt-2 text-2xl font-bold">Vokabel Trainer</h2>
+            <p class="mt-3 max-w-md text-sm leading-6 text-purple-100">
+              Lerne Vokabeln mit intervallbasierter Wiederholung – ähnlich wie Anki.
+            </p>
+            <span class="mt-6 inline-flex items-center gap-2 rounded-2xl bg-white/10 px-4 py-2 text-sm font-semibold transition group-hover:bg-white/15">
+              App starten
+               <span aria-hidden="true">→</span>
+            </span>
+          </a>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
