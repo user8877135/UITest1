@@ -18,6 +18,7 @@ env/
 # Env files / secrets
 .env
 .env.*
+.htpasswd
 
 # Local databases and runtime files
 *.db

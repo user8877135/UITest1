@@ -1,0 +1,525 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Aktien Musterdepot</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700;800&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --bg-a: #ecfdf5;
+        --bg-b: #d1fae5;
+        --bg-c: #34d399;
+        --ink: #052e16;
+      }
+
+      body {
+        font-family: "Space Grotesk", sans-serif;
+      }
+
+      @keyframes floatIn {
+        from {
+          opacity: 0;
+          transform: translateY(12px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .animate-float-in {
+        animation: floatIn 320ms ease-out both;
+      }
+    </style>
+  </head>
+  <body class="min-h-screen bg-[radial-gradient(circle_at_top,_var(--bg-a),_var(--bg-b)_48%,_var(--bg-c)_100%)] px-4 py-6 text-[color:var(--ink)] sm:px-8">
+    <a href="index.html" class="fixed left-4 top-4 z-50 rounded-2xl bg-white/90 px-3 py-2 text-sm font-semibold text-[color:var(--ink)] shadow-md transition hover:bg-white focus:outline-none focus:ring-4 focus:ring-emerald-300/50">Zurück zur Index-Seite</a>
+
+    <main class="mx-auto w-full max-w-7xl space-y-5 pt-14">
+      <header class="animate-float-in rounded-3xl border border-emerald-200/80 bg-white/85 p-5 shadow-2xl shadow-emerald-950/10 backdrop-blur">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p class="text-xs font-bold uppercase tracking-[0.28em] text-emerald-700">App 4 · Musterdepot</p>
+            <h1 class="mt-2 text-3xl font-black tracking-tight sm:text-5xl">Aktien verwalten, Kurse laden, Performance sehen</h1>
+            <p class="mt-3 max-w-3xl text-sm leading-7 text-emerald-950/75 sm:text-base">
+              Erfasse Ticker oder ISIN, speichere Käufe und Verkäufe und hole Live-Kurse über Yahoo Finance.
+            </p>
+          </div>
+          <div class="flex flex-wrap gap-3">
+            <button id="refreshBtn" class="rounded-2xl bg-emerald-700 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-emerald-900/20 transition hover:bg-emerald-800 focus:outline-none focus:ring-4 focus:ring-emerald-300/70">Kurse aktualisieren</button>
+            <button id="reloadBtn" class="rounded-2xl border border-emerald-300 bg-white px-4 py-2 text-sm font-semibold text-emerald-900 transition hover:bg-emerald-50 focus:outline-none focus:ring-4 focus:ring-emerald-300/70">Neu laden</button>
+          </div>
+        </div>
+      </header>
+
+      <section class="grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
+        <div class="space-y-5">
+          <section class="animate-float-in rounded-3xl border border-emerald-200/80 bg-white/90 p-5 shadow-xl shadow-emerald-900/10 backdrop-blur">
+            <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+              <div>
+                <p class="text-xs font-bold uppercase tracking-[0.22em] text-emerald-700">Portfolio Übersicht</p>
+                <h2 class="mt-1 text-2xl font-bold">Gesamtwerte und Performance</h2>
+              </div>
+              <div class="rounded-2xl bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-900" id="summaryMeta">Noch keine Daten geladen</div>
+            </div>
+
+            <div class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4" id="summaryCards"></div>
+
+            <div class="mt-5 grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+              <div class="rounded-3xl border border-emerald-100 bg-emerald-50/70 p-4">
+                <h3 class="text-sm font-bold uppercase tracking-[0.22em] text-emerald-700">Zeitreihe</h3>
+                <div class="mt-3 h-72 w-full rounded-2xl bg-white p-3 shadow-inner">
+                  <canvas id="portfolioChart"></canvas>
+                </div>
+              </div>
+
+              <div class="rounded-3xl border border-emerald-100 bg-white p-4">
+                <h3 class="text-sm font-bold uppercase tracking-[0.22em] text-emerald-700">Position hinzufügen</h3>
+                <p class="mt-2 text-sm leading-6 text-emerald-900/75">Zuerst suchen, dann speichern. So kannst du die Eingabe über Ticker oder ISIN bestätigen.</p>
+
+                <div class="mt-4 space-y-3">
+                  <div>
+                    <label class="text-sm font-semibold">Ticker oder ISIN</label>
+                    <div class="mt-1 flex gap-2">
+                      <input id="searchQuery" class="w-full rounded-2xl border border-emerald-200 bg-white px-4 py-3 outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-200" placeholder="z.B. AAPL oder US0378331005" />
+                      <button id="searchBtn" class="rounded-2xl bg-emerald-700 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-800">Suchen</button>
+                    </div>
+                  </div>
+
+                  <div id="searchResults" class="hidden rounded-2xl border border-emerald-100 bg-emerald-50/70 p-3 text-sm"></div>
+
+                  <div class="grid gap-3 sm:grid-cols-2">
+                    <label class="flex flex-col gap-1 text-sm font-semibold">
+                      Anzahl
+                      <input id="quantityInput" type="number" step="0.0001" min="0" class="rounded-2xl border border-emerald-200 bg-white px-4 py-3 outline-none focus:border-emerald-400 focus:ring-4 focus:ring-emerald-200" value="1" />
+                    </label>
+                    <label class="flex flex-col gap-1 text-sm font-semibold">
+                      Preis pro Aktie
+                      <input id="priceInput" type="number" step="0.01" min="0" class="rounded-2xl border border-emerald-200 bg-white px-4 py-3 outline-none focus:border-emerald-400 focus:ring-4 focus:ring-emerald-200" placeholder="z.B. 184.20" />
+                    </label>
+                  </div>
+
+                  <div class="grid gap-3 sm:grid-cols-2">
+                    <label class="flex flex-col gap-1 text-sm font-semibold">
+                      Typ
+                      <select id="transactionType" class="rounded-2xl border border-emerald-200 bg-white px-4 py-3 outline-none focus:border-emerald-400 focus:ring-4 focus:ring-emerald-200">
+                        <option value="buy">Kauf</option>
+                        <option value="sell">Verkauf</option>
+                      </select>
+                    </label>
+                    <label class="flex flex-col gap-1 text-sm font-semibold">
+                      Datum
+                      <input id="tradeDateInput" type="date" class="rounded-2xl border border-emerald-200 bg-white px-4 py-3 outline-none focus:border-emerald-400 focus:ring-4 focus:ring-emerald-200" />
+                    </label>
+                  </div>
+
+                  <label class="flex flex-col gap-1 text-sm font-semibold">
+                    Notizen
+                    <textarea id="notesInput" rows="3" class="rounded-2xl border border-emerald-200 bg-white px-4 py-3 outline-none focus:border-emerald-400 focus:ring-4 focus:ring-emerald-200" placeholder="z.B. Erste Position im Musterdepot"></textarea>
+                  </label>
+
+                  <button id="saveTransactionBtn" class="w-full rounded-2xl bg-stone-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-stone-800 disabled:cursor-not-allowed disabled:bg-stone-400" disabled>Transaktion speichern</button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="animate-float-in rounded-3xl border border-emerald-200/80 bg-white/90 p-5 shadow-xl shadow-emerald-900/10 backdrop-blur">
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p class="text-xs font-bold uppercase tracking-[0.22em] text-emerald-700">Aktienbestand</p>
+                <h2 class="mt-1 text-2xl font-bold">Positionen im Depot</h2>
+              </div>
+              <p id="holdingsCount" class="text-sm font-semibold text-emerald-900/70">0 Positionen</p>
+            </div>
+
+            <div class="mt-4 overflow-hidden rounded-3xl border border-emerald-100 bg-white">
+              <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-emerald-100 text-left text-sm">
+                  <thead class="bg-emerald-50 text-emerald-900">
+                    <tr>
+                      <th class="px-4 py-3 font-semibold">Aktie</th>
+                      <th class="px-4 py-3 font-semibold">Menge</th>
+                      <th class="px-4 py-3 font-semibold">Ø Kauf</th>
+                      <th class="px-4 py-3 font-semibold">Kurs</th>
+                      <th class="px-4 py-3 font-semibold">Wert</th>
+                      <th class="px-4 py-3 font-semibold">P/L</th>
+                    </tr>
+                  </thead>
+                  <tbody id="holdingsTable" class="divide-y divide-emerald-100 bg-white"></tbody>
+                </table>
+              </div>
+              <div id="holdingsEmpty" class="hidden px-4 py-8 text-center text-sm text-emerald-900/70">Noch keine Aktien im Musterdepot.</div>
+            </div>
+          </section>
+        </div>
+
+        <aside class="space-y-5">
+          <section class="animate-float-in rounded-3xl border border-emerald-200/80 bg-white/90 p-5 shadow-xl shadow-emerald-900/10 backdrop-blur">
+            <p class="text-xs font-bold uppercase tracking-[0.22em] text-emerald-700">Transaktionen</p>
+            <h2 class="mt-1 text-2xl font-bold">Kauf- und Verkaufshistorie</h2>
+            <div id="transactionsList" class="mt-4 space-y-3"></div>
+            <div id="transactionsEmpty" class="mt-6 rounded-2xl border border-dashed border-emerald-200 bg-emerald-50 px-4 py-6 text-center text-sm text-emerald-900/70">Noch keine Transaktionen vorhanden.</div>
+          </section>
+        </aside>
+      </section>
+    </main>
+
+    <script>
+      const api = {
+        search: "/api/stocks/search",
+        transactions: "/api/transactions",
+        summary: "/api/portfolio/summary",
+        refresh: "/api/portfolio/refresh",
+        history: "/api/portfolio/history",
+      };
+
+      const state = {
+        selectedStock: null,
+        chart: null,
+      };
+
+      const summaryCards = document.getElementById("summaryCards");
+      const summaryMeta = document.getElementById("summaryMeta");
+      const holdingsTable = document.getElementById("holdingsTable");
+      const holdingsEmpty = document.getElementById("holdingsEmpty");
+      const holdingsCount = document.getElementById("holdingsCount");
+      const transactionsList = document.getElementById("transactionsList");
+      const transactionsEmpty = document.getElementById("transactionsEmpty");
+      const searchResults = document.getElementById("searchResults");
+      const searchQuery = document.getElementById("searchQuery");
+      const quantityInput = document.getElementById("quantityInput");
+      const priceInput = document.getElementById("priceInput");
+      const transactionType = document.getElementById("transactionType");
+      const tradeDateInput = document.getElementById("tradeDateInput");
+      const notesInput = document.getElementById("notesInput");
+      const saveTransactionBtn = document.getElementById("saveTransactionBtn");
+      const searchBtn = document.getElementById("searchBtn");
+      const refreshBtn = document.getElementById("refreshBtn");
+      const reloadBtn = document.getElementById("reloadBtn");
+      const chartCanvas = document.getElementById("portfolioChart");
+
+      tradeDateInput.value = new Date().toISOString().slice(0, 10);
+
+      function formatCurrency(value, currency) {
+        const safeCurrency = currency || "EUR";
+        try {
+          return new Intl.NumberFormat("de-DE", {
+            style: "currency",
+            currency: safeCurrency,
+            maximumFractionDigits: 2,
+          }).format(value || 0);
+        } catch {
+          return `${Number(value || 0).toFixed(2)} ${safeCurrency}`;
+        }
+      }
+
+      function formatNumber(value) {
+        return new Intl.NumberFormat("de-DE", { maximumFractionDigits: 4 }).format(value || 0);
+      }
+
+      function formatDate(value) {
+        if (!value) return "-";
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return value;
+        return new Intl.DateTimeFormat("de-DE", {
+          dateStyle: "medium",
+          timeStyle: "short",
+        }).format(date);
+      }
+
+      function setSelectedStock(candidate) {
+        state.selectedStock = candidate;
+        saveTransactionBtn.disabled = !candidate;
+        if (!candidate) {
+          searchResults.classList.add("hidden");
+          searchResults.innerHTML = "";
+          return;
+        }
+
+        const label = `${candidate.symbol}${candidate.isin ? ` · ${candidate.isin}` : ""}`;
+        searchResults.classList.remove("hidden");
+        searchResults.innerHTML = `
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <p class="font-semibold text-emerald-900">${candidate.name || candidate.symbol}</p>
+              <p class="text-xs text-emerald-900/70">${label}</p>
+            </div>
+            <span class="rounded-full bg-emerald-700 px-3 py-1 text-xs font-semibold text-white">Ausgewählt</span>
+          </div>
+        `;
+      }
+
+      function renderSearchResults(candidates) {
+        if (!candidates.length) {
+          searchResults.classList.remove("hidden");
+          searchResults.innerHTML = '<p class="text-sm text-rose-700">Keine Treffer gefunden. Prüfe Ticker oder ISIN.</p>';
+          setSelectedStock(null);
+          return;
+        }
+
+        searchResults.classList.remove("hidden");
+        searchResults.innerHTML = candidates
+          .map(
+            (candidate, index) => `
+              <button type="button" data-index="${index}" class="w-full rounded-2xl border border-emerald-100 bg-white px-4 py-3 text-left transition hover:border-emerald-300 hover:bg-emerald-50">
+                <div class="flex items-center justify-between gap-3">
+                  <div>
+                    <p class="font-semibold text-emerald-900">${candidate.name || candidate.symbol}</p>
+                    <p class="text-xs text-emerald-900/70">${candidate.symbol}${candidate.isin ? ` · ${candidate.isin}` : ""}${candidate.exchange ? ` · ${candidate.exchange}` : ""}</p>
+                  </div>
+                  <span class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-900">Wählen</span>
+                </div>
+              </button>
+            `,
+          )
+          .join("");
+
+        searchResults.querySelectorAll("button[data-index]").forEach((button) => {
+          button.addEventListener("click", () => {
+            const candidate = candidates[Number(button.dataset.index)];
+            setSelectedStock(candidate);
+          });
+        });
+
+        if (candidates.length === 1) {
+          setSelectedStock(candidates[0]);
+        }
+      }
+
+      function renderSummary(summary) {
+        const profit = summary.profitLoss || 0;
+        const profitClass = profit >= 0 ? "text-emerald-700" : "text-rose-700";
+        summaryMeta.textContent = `${summary.positionCount || 0} Positionen`;
+
+        const cards = [
+          { label: "Aktueller Wert", value: formatCurrency(summary.totalCurrentValue || 0, "EUR") },
+          { label: "Netto-Einsatz", value: formatCurrency(summary.netInvested || 0, "EUR") },
+          { label: "Gewinn / Verlust", value: formatCurrency(profit, "EUR"), extraClass: profitClass },
+          { label: "Performance", value: `${(summary.profitLossPercent || 0).toFixed(2)} %`, extraClass: profitClass },
+        ];
+
+        summaryCards.innerHTML = cards
+          .map(
+            (card) => `
+              <div class="rounded-3xl border border-emerald-100 bg-white p-4 shadow-sm">
+                <p class="text-xs font-bold uppercase tracking-[0.22em] text-emerald-700">${card.label}</p>
+                <p class="mt-2 text-2xl font-black ${card.extraClass || "text-emerald-950"}">${card.value}</p>
+              </div>
+            `,
+          )
+          .join("");
+
+        holdingsCount.textContent = `${summary.holdings?.length || 0} Positionen`;
+        if (!summary.holdings || summary.holdings.length === 0) {
+          holdingsTable.innerHTML = "";
+          holdingsEmpty.classList.remove("hidden");
+          return;
+        }
+
+        holdingsEmpty.classList.add("hidden");
+        holdingsTable.innerHTML = summary.holdings
+          .map((holding) => {
+            const className = holding.profitLoss >= 0 ? "text-emerald-700" : "text-rose-700";
+            const badge = holding.source === "live" ? "Live" : "Cache";
+            return `
+              <tr>
+                <td class="px-4 py-3 align-top">
+                  <div class="font-semibold text-emerald-950">${holding.name}</div>
+                  <div class="text-xs text-emerald-900/70">${holding.symbol}${holding.isin ? ` · ${holding.isin}` : ""}</div>
+                  <span class="mt-1 inline-flex rounded-full bg-emerald-100 px-2 py-1 text-[11px] font-semibold text-emerald-900">${badge}</span>
+                </td>
+                <td class="px-4 py-3 align-top">${formatNumber(holding.quantity)}</td>
+                <td class="px-4 py-3 align-top">${formatCurrency(holding.averageBuyPrice || 0, holding.currency || "EUR")}</td>
+                <td class="px-4 py-3 align-top">${formatCurrency(holding.currentPrice || 0, holding.currency || "EUR")}</td>
+                <td class="px-4 py-3 align-top">${formatCurrency(holding.currentValue || 0, holding.currency || "EUR")}</td>
+                <td class="px-4 py-3 align-top ${className}">
+                  <div class="font-semibold">${formatCurrency(holding.profitLoss || 0, holding.currency || "EUR")}</div>
+                  <div class="text-xs">${(holding.profitLossPercent || 0).toFixed(2)} %</div>
+                </td>
+              </tr>
+            `;
+          })
+          .join("");
+      }
+
+      function renderTransactions(transactions) {
+        if (!transactions.length) {
+          transactionsList.innerHTML = "";
+          transactionsEmpty.classList.remove("hidden");
+          return;
+        }
+
+        transactionsEmpty.classList.add("hidden");
+        transactionsList.innerHTML = transactions
+          .map(
+            (transaction) => {
+              const isBuy = transaction.transactionType === "buy";
+              const badgeClass = isBuy ? "bg-emerald-100 text-emerald-900" : "bg-rose-100 text-rose-900";
+              return `
+                <article class="rounded-3xl border border-emerald-100 bg-emerald-50/60 p-4">
+                  <div class="flex items-start justify-between gap-3">
+                    <div>
+                      <p class="text-sm font-semibold ${isBuy ? "text-emerald-800" : "text-rose-800"}">${isBuy ? "Kauf" : "Verkauf"} · ${transaction.symbol}</p>
+                      <p class="text-xs text-emerald-950/70">${transaction.name || transaction.symbol}${transaction.isin ? ` · ${transaction.isin}` : ""}</p>
+                    </div>
+                    <span class="rounded-full px-3 py-1 text-xs font-semibold ${badgeClass}">${formatDate(transaction.tradeDate)}</span>
+                  </div>
+                  <div class="mt-3 grid grid-cols-2 gap-2 text-sm text-emerald-950/80">
+                    <div>Menge: <span class="font-semibold">${formatNumber(transaction.quantity)}</span></div>
+                    <div>Preis: <span class="font-semibold">${formatCurrency(transaction.price || 0, "EUR")}</span></div>
+                  </div>
+                  ${transaction.notes ? `<p class="mt-3 text-sm text-emerald-950/70">${transaction.notes}</p>` : ""}
+                  <button data-delete-transaction="${transaction.id}" class="mt-3 rounded-2xl border border-emerald-200 bg-white px-3 py-2 text-xs font-semibold text-emerald-900 transition hover:bg-emerald-50">Löschen</button>
+                </article>
+              `;
+            },
+          )
+          .join("");
+
+        transactionsList.querySelectorAll("button[data-delete-transaction]").forEach((button) => {
+          button.addEventListener("click", async () => {
+            const id = button.getAttribute("data-delete-transaction");
+            if (!confirm("Diese Transaktion wirklich löschen?")) {
+              return;
+            }
+            await fetch(`${api.transactions}/${id}`, { method: "DELETE" });
+            await loadDashboard();
+          });
+        });
+      }
+
+      function renderChart(history) {
+        const labels = history.map((item) => formatDate(item.createdAt));
+        const values = history.map((item) => item.totalValue || 0);
+
+        if (state.chart) {
+          state.chart.destroy();
+        }
+
+        state.chart = new Chart(chartCanvas, {
+          type: "line",
+          data: {
+            labels,
+            datasets: [
+              {
+                label: "Depotwert",
+                data: values,
+                borderColor: "#047857",
+                backgroundColor: "rgba(16, 185, 129, 0.18)",
+                tension: 0.35,
+                fill: true,
+                pointRadius: 2,
+                pointHoverRadius: 4,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { ticks: { maxTicksLimit: 6 }, grid: { display: false } },
+              y: {
+                ticks: {
+                  callback(value) {
+                    return new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(value);
+                  },
+                },
+              },
+            },
+          },
+        });
+      }
+
+      async function loadDashboard() {
+        summaryMeta.textContent = "Lade Daten...";
+        const [summaryResponse, historyResponse, transactionsResponse] = await Promise.all([
+          fetch(api.summary),
+          fetch(`${api.history}?limit=120`),
+          fetch(api.transactions),
+        ]);
+
+        const summary = await summaryResponse.json();
+        const history = await historyResponse.json();
+        const transactions = await transactionsResponse.json();
+
+        renderSummary(summary);
+        renderTransactions(transactions);
+        renderChart(history);
+      }
+
+      async function searchStock() {
+        const query = searchQuery.value.trim();
+        if (!query) {
+          setSelectedStock(null);
+          searchResults.classList.remove("hidden");
+          searchResults.innerHTML = '<p class="text-sm text-rose-700">Bitte Ticker oder ISIN eingeben.</p>';
+          return;
+        }
+
+        const response = await fetch(api.search, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query }),
+        });
+        const payload = await response.json();
+        renderSearchResults(payload.candidates || []);
+      }
+
+      async function saveTransaction() {
+        const candidate = state.selectedStock;
+        const query = searchQuery.value.trim();
+        const response = await fetch(api.transactions, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            symbol: candidate?.symbol || query,
+            isin: candidate?.isin || query,
+            name: candidate?.name || query,
+            transactionType: transactionType.value,
+            quantity: Number(quantityInput.value),
+            price: Number(priceInput.value),
+            tradeDate: tradeDateInput.value ? `${tradeDateInput.value}T00:00:00Z` : null,
+            notes: notesInput.value.trim(),
+          }),
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          alert(error.detail || "Transaktion konnte nicht gespeichert werden.");
+          return;
+        }
+
+        notesInput.value = "";
+        priceInput.value = "";
+        quantityInput.value = "1";
+        await loadDashboard();
+      }
+
+      searchBtn.addEventListener("click", searchStock);
+      searchQuery.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          searchStock();
+        }
+      });
+      saveTransactionBtn.addEventListener("click", saveTransaction);
+      refreshBtn.addEventListener("click", async () => {
+        await fetch(api.refresh, { method: "POST" });
+        await loadDashboard();
+      });
+      reloadBtn.addEventListener("click", loadDashboard);
+
+      loadDashboard().catch((error) => {
+        console.error(error);
+        summaryMeta.textContent = "Fehler beim Laden der Daten";
+      });
+    </script>
+  </body>
+</html>
